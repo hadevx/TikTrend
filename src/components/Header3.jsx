@@ -214,6 +214,26 @@ export default function Header({ onSearch }) {
 
           {/* Mobile toggle */}
           <div className="flex items-center space-x-3 md:hidden">
+            {/* User & Cart */}
+            <div className="flex items-center space-x-6 justify-end">
+              {userInfo ? (
+                <Link to="/profile" className="flex items-center space-x-1 hover:opacity-50">
+                  <UserIconSvg className="h-5 w-5" /> {userInfo.name}
+                </Link>
+              ) : (
+                <Link to="/login" className="px-3 py-2 hover:opacity-80 rounded-lg">
+                  Login
+                </Link>
+              )}
+              <Link to="/cart" className="relative flex items-center hover:opacity-50">
+                <ShoppingCart strokeWidth={2} size={24} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-base rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            </div>
             <button onClick={handleClick} className="p-2 rounded-md z-50">
               {clicked ? <X size={28} /> : <Menu size={28} />}
             </button>

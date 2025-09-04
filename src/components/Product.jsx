@@ -62,11 +62,11 @@ function Product({ product }) {
   return (
     <div className="flex flex-col rounded-2xl duration-300 overflow-hidden">
       <Link to={`/products/${product._id}`} className="relative group">
-        {product.hasDiscount && (
+        {/*  {product.hasDiscount && (
           <span className="absolute top-3 left-3 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full z-10">
             -{(product.discountBy * 100).toFixed(0)}%
           </span>
-        )}
+        )} */}
         <img
           src={selectedVariant?.images?.[0]?.url || product?.image?.[0]?.url || "/placeholder.svg"}
           alt={product.name}
@@ -80,7 +80,7 @@ function Product({ product }) {
           <h2 className="text-gray-900 font-semibold text-lg truncate">{product.name}</h2>
 
           {/* Variant Colors */}
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex gap-1">
             {product.variants?.map((variant) => (
               <button
                 key={variant._id}
@@ -99,14 +99,14 @@ function Product({ product }) {
 
           {/* Sizes */}
           {selectedVariant && (
-            <div className="mt-2 flex gap-2 flex-wrap">
+            <div className="mt-2  flex gap-2 flex-wrap">
               {selectedVariant.sizes?.map((s) => (
                 <button
                   key={s.size}
                   disabled={s.stock === 0}
                   onClick={() => setSelectedSize(s.size)}
                   className={clsx(
-                    "px-2 py-1 border rounded-full text-sm font-medium transition-colors",
+                    "w-6 h-6 border-2 rounded-full text-sm font-medium flex items-center justify-center transition-colors",
                     selectedSize === s.size
                       ? "bg-black text-white border-black"
                       : "bg-white text-gray-700 border-gray-300",
