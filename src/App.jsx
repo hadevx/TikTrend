@@ -33,7 +33,7 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/products/:productId" element={<Product />} />
       <Route path="/all-products" element={<AllProducts />} />
-      <Route path="/category/:category" element={<ProductByCategory />} />
+      <Route path="/category/:id" element={<ProductByCategory />} />
       <Route path="/payment/callback" element={<PaymentCallback />} /> {/* Add this */}
       <Route path="/cart" element={<Cart />} />
       <Route path="/payment" element={<PrivateRoute element={<Payment />} />} />

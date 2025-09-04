@@ -368,25 +368,25 @@ function Profile() {
               <motion.div
                 key={order._id}
                 variants={childVariants}
-                className="flex  flex-col hover:bg-zinc-200/5  gap-5 border bg-zinc-200/10 p-7 drop-shadow-lg shadow rounded-lg">
+                className=" hover:bg-zinc-200/5  gap-5 border bg-zinc-200/10 py-5 drop-shadow-lg shadow rounded-lg">
                 <div className="flex flex-col gap-5">
-                  <Link to={`/order/${order?._id}`} className="flex gap-5 ">
-                    <h1 className="flex flex-col gap-2 items-center ">
+                  <Link to={`/order/${order?._id}`} className="grid grid-cols-3  gap-5 ">
+                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base ">
                       Placed in:{" "}
                       <span className="font-bold"> {order?.createdAt.substring(0, 10)}</span>
                     </h1>
-                    <h1 className="flex flex-col gap-2 items-center ">
+                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base">
                       Payment method: <span className="font-bold">{order?.paymentMethod}</span>
                     </h1>
-                    <h1 className="flex flex-col gap-2 items-center">
+                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base">
                       Total price:{" "}
                       <span className="font-bold">{order?.totalPrice.toFixed(3)} KD</span>
                     </h1>
-                    <h1 className="flex flex-col gap-2 items-center">
+                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base">
                       Products:
                       <span className="font-bold">{order?.orderItems.length}</span>
                     </h1>
-                    <h1 className="flex flex-col gap-2 items-center">
+                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base">
                       Status:
                       <span className="font-bold text-sm">
                         {order?.isDelivered ? (

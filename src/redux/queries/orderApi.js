@@ -44,10 +44,10 @@ export const orderApi = apiSlice.injectEndpoints({
     }), */
     // redux/queries/orderApi.js
     checkStock: builder.mutation({
-      query: (orderItems) => ({
+      query: (payload) => ({
         url: "/api/orders/check-stock",
         method: "POST",
-        body: { orderItems },
+        body: payload,
       }),
     }),
   }),

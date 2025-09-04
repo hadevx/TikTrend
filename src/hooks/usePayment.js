@@ -3,22 +3,23 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { clearCart } from "../redux/slices/cartSlice";
-import { useCreateOrderMutation, usePayOrderMutation } from "../redux/queries/orderApi";
-import { useUpdateStockMutation, useFetchProductsByIdsMutation } from "../redux/queries/productApi";
+import {
+  useCreateOrderMutation,
+  usePayOrderMutation,
+  useCheckStockMutation,
+} from "../redux/queries/orderApi";
+import { useUpdateStockMutation } from "../redux/queries/productApi";
 
 export function usePayment(cartItems, userAddress, paymentMethod, deliveryStatus) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // API hooks
   const [createOrder, { isLoading: loadingCreateOrder }] = useCreateOrderMutation();
   const [payOrder] = usePayOrderMutation();
-  const [updateStock, { isLoading: loadingUpdateStock }] = useUpdateStockMutation();
-  const [fetchProductsByIds, { isLoading: loadingCheck }] = useFetchProductsByIdsMutation();
-
+  const [checkStock] = useCheckStockMutation(); // backend stock check
+  const [updateStock] = useUpdateStockMutation(); // update stock after order
   const [exchangeRate, setExchangeRate] = useState(3.25); // fallback rate
 
-  // ✅ Calculate total cost
   const calculateTotalCost = () => {
     const items = Number(cartItems.reduce((acc, item) => acc + item.price * item.qty, 0));
     const deliveryFee = Number(Number(deliveryStatus?.[0]?.shippingFee || 0).toFixed(3));
@@ -27,37 +28,53 @@ export function usePayment(cartItems, userAddress, paymentMethod, deliveryStatus
 
   const totalAmount = calculateTotalCost();
 
-  // ✅ Stock check
-  const checkStock = async () => {
-    const productIds = cartItems.map((item) => item._id);
-    const latestProducts = await fetchProductsByIds(productIds).unwrap();
-
-    return cartItems.filter((item) => {
-      const product = latestProducts.find((p) => p._id === item._id);
-      return !product || item.qty > product.countInStock;
-    });
-  };
-
   // ✅ Cash payment
   const handleCashPayment = async () => {
     try {
-      const outOfStock = await checkStock();
-      if (outOfStock.length > 0) {
-        toast.error(`Out of stock: ${outOfStock.map((i) => i.name).join(", ")}`);
+      // Prepare minimal payload
+      const stockPayload = cartItems.map((item) => ({
+        productId: item._id,
+        variantId: item.variantId || null,
+        size: item.variantSize || null,
+        qty: item.qty,
+      }));
+
+      // Check stock from backend
+      const stockResult = await checkStock(stockPayload).unwrap();
+
+      if (stockResult.outOfStockItems?.length > 0) {
+        toast.error(
+          `Out of stock: ${stockResult.outOfStockItems
+            .map((i) => i.productName || i.productId)
+            .join(", ")}`
+        );
         return;
       }
 
+      // Map full order items for order creation
+      const orderItemsMapped = cartItems.map((item) => ({
+        name: item.name,
+        qty: item.qty,
+        image: item.image,
+        price: item.price,
+        product: item._id,
+        variantId: item.variantId,
+        variantColor: item.variantColor,
+        variantSize: item.variantSize,
+        variantImage: item.variantImage,
+      }));
+
       const res = await createOrder({
-        orderItems: cartItems,
+        orderItems: orderItemsMapped,
         shippingAddress: userAddress,
         paymentMethod,
-        itemsPrice: cartItems.reduce((a, c) => a + c.price * c.qty, 0),
+        itemsPrice: orderItemsMapped.reduce((a, c) => a + c.price * c.qty, 0),
         shippingPrice: deliveryStatus?.[0]?.shippingFee,
         totalPrice: totalAmount,
       }).unwrap();
 
-      await updateStock({ orderItems: cartItems }).unwrap();
-      console.log("testing :", res);
+      await updateStock({ orderItems: orderItemsMapped }).unwrap();
+
       dispatch(clearCart());
       toast.success("Order created successfully");
       navigate(`/order/${res._id}`);
@@ -68,10 +85,19 @@ export function usePayment(cartItems, userAddress, paymentMethod, deliveryStatus
 
   // ✅ PayPal payment
   const handlePayPalApprove = async (data, actions) => {
-    let pendingOrder;
     try {
-      // Create pending order
-      pendingOrder = await createOrder({
+      const stockResult = await checkStock({ cartItems }).unwrap();
+
+      if (stockResult.outOfStockItems?.length > 0) {
+        toast.error(
+          `Out of stock: ${stockResult.outOfStockItems
+            .map((i) => i.name || i.productId)
+            .join(", ")}`
+        );
+        return;
+      }
+
+      const pendingOrder = await createOrder({
         orderItems: cartItems,
         shippingAddress: userAddress,
         paymentMethod,
@@ -81,11 +107,9 @@ export function usePayment(cartItems, userAddress, paymentMethod, deliveryStatus
         isPaid: false,
       }).unwrap();
 
-      // Capture PayPal payment
       const details = await actions.order.capture();
       const transaction = details.purchase_units[0].payments.captures[0];
 
-      // Mark order paid
       await payOrder({
         orderId: pendingOrder._id,
         paymentResult: {
@@ -96,19 +120,15 @@ export function usePayment(cartItems, userAddress, paymentMethod, deliveryStatus
         },
       }).unwrap();
 
-      // Update stock
-      await updateStock({ orderItems: cartItems }).unwrap();
-
       dispatch(clearCart());
       toast.success("Order created successfully");
       navigate(`/order/${pendingOrder._id}`);
     } catch (error) {
-      console.error("Payment/order/stock failed:", error);
       toast.error("Something went wrong. Please contact support.");
     }
   };
 
-  // ✅ Fetch exchange rate (KWD → USD)
+  // Fetch exchange rate (KWD → USD)
   useEffect(() => {
     const fetchRate = async () => {
       try {
@@ -141,47 +161,11 @@ export function usePayment(cartItems, userAddress, paymentMethod, deliveryStatus
 
   const amountInUSD = (totalAmount * exchangeRate).toFixed(2);
 
-  const createPayPalOrder = (userInfo, amountInUSD) => (data, actions) => {
-    return actions.order.create({
-      purchase_units: [
-        {
-          amount: {
-            value: amountInUSD,
-          },
-        },
-      ],
-      application_context: {
-        shipping_preference: "NO_SHIPPING",
-        user_action: "PAY_NOW",
-      },
-      payer: {
-        name: {
-          given_name: userInfo?.name,
-          surname: userInfo?.name,
-        },
-        phone: {
-          phone_type: "MOBILE",
-          phone_number: {
-            national_number: userInfo?.phone,
-          },
-        },
-        email_address: userInfo?.email,
-        address: {
-          country_code: "KW",
-          postal_code: "00000",
-        },
-      },
-    });
-  };
-
   return {
     totalAmount,
     amountInUSD,
     loadingCreateOrder,
-    loadingCheck,
-    loadingUpdateStock,
     handleCashPayment,
     handlePayPalApprove,
-    createPayPalOrder,
   };
 }

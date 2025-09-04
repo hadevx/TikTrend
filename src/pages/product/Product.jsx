@@ -5,202 +5,243 @@ import { addToCart } from "../../redux/slices/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import clsx from "clsx";
-import {
-  useGetProductByIdQuery,
-  useGetDiscountStatusQuery,
-  useGetCategoriesTreeQuery,
-} from "../../redux/queries/productApi";
+import { useGetProductByIdQuery } from "../../redux/queries/productApi";
 import Loader from "../../components/Loader";
 
 function Product() {
   const dispatch = useDispatch();
   const { productId } = useParams();
-  const { data: discountStatus } = useGetDiscountStatusQuery();
   const { data: product, isLoading, refetch } = useGetProductByIdQuery(productId);
-  const { data: categoryTree } = useGetCategoriesTreeQuery();
 
-  console.log(product);
-  // Refetch when stock changes
+  const cartItems = useSelector((state) => state.cart.cartItems);
+  const [counter, setCounter] = useState(1);
+  const [activeImage, setActiveImage] = useState(null);
+  const [activeVariant, setActiveVariant] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+
   useEffect(() => {
     if (product) {
       refetch();
+
+      if (product.variants?.length > 0) {
+        // Product with variants
+        setActiveVariant(product.variants[0]);
+        setActiveImage(product.variants[0].images?.[0]?.url || product.image?.[0]?.url);
+        setSelectedSize(product.variants[0].sizes?.[0] || null);
+      } else {
+        // Product without variants
+        setActiveVariant(null);
+        setActiveImage(product.image?.[0]?.url || "/placeholder.svg");
+        setSelectedSize(null);
+      }
     }
-  }, [product?.countInStock, refetch]);
+  }, [product, refetch]);
 
-  const cartItems = useSelector((state) => state.cart.cartItems);
-
-  const [counter, setCounter] = useState(1);
+  const stock = activeVariant ? selectedSize?.stock || 0 : product?.countInStock || 0;
 
   const handleIncrement = () => {
-    product.countInStock > counter && setCounter(counter + 1);
+    if (counter < stock) setCounter(counter + 1);
   };
+
   const handleDecrement = () => {
-    counter > 1 && setCounter(counter - 1);
+    if (counter > 1) setCounter(counter - 1);
   };
 
   const handleAddToCart = () => {
-    const productInCart = cartItems.find((p) => p._id === product._id);
-
-    if (productInCart && productInCart.qty === productInCart.countInStock) {
-      return toast.error("You Can't add more", { position: "top-center" });
+    if (activeVariant && !selectedSize) {
+      return toast.error("Please select a size", { position: "top-center" });
     }
-    dispatch(addToCart({ ...product, price: newPrice, qty: Number(counter) }));
+
+    if (stock === 0) {
+      return toast.error("Out of stock", { position: "top-center" });
+    }
+
+    const productInCart = cartItems.find(
+      (p) =>
+        p._id === product._id &&
+        (activeVariant
+          ? p.variantId === activeVariant._id && p.variantSize === selectedSize?.size
+          : true)
+    );
+
+    if (productInCart && productInCart.qty >= stock) {
+      return toast.error("You can't add more", { position: "top-center" });
+    }
+
+    dispatch(
+      addToCart({
+        ...product,
+        variantId: activeVariant?._id || null,
+        variantColor: activeVariant?.color || null,
+        variantSize: selectedSize?.size || null,
+        variantImage: activeVariant?.images || null,
+        stock,
+        qty: counter,
+      })
+    );
+
     toast.success(`${product.name} added to cart`, { position: "top-center" });
   };
 
-  const oldPrice = product?.price;
-  let newPrice = oldPrice;
-
-  if (discountStatus && discountStatus.length > 0) {
-    const applicableDiscount = discountStatus.find((d) =>
-      d.category.includes(findCategoryNameById(product?.category, categoryTree || []))
-    );
-    if (applicableDiscount) {
-      newPrice = oldPrice - oldPrice * applicableDiscount.discountBy;
-    }
-  }
-
-  // Active image state
-  const [activeImage, setActiveImage] = useState(product?.image?.[0]?.url);
-  useEffect(() => {
-    if (product?.image?.length > 0) {
-      setActiveImage(product.image[0].url);
-    }
-  }, [product]);
-
   return (
     <Layout>
-      <div className="container mt-[100px]  px-4 mx-auto flex min-h-screen  flex-col sm:flex-row justify-center gap-10">
-        {isLoading ? (
-          <Loader />
-        ) : (
-          <>
-            {/* Image Section */}
-            <div className="w-full sm:w-2/3 md:w-1/2 lg:w-[500px] flex flex-col items-center">
-              {/* Main Image */}
-              <div className="w-full h-[500px] overflow-hidden rounded-xl shadow-lg">
-                <img
-                  src={activeImage}
-                  loading="lazy"
-                  alt={product?.name}
-                  className="w-full h-full object-cover rounded-xl transition-transform duration-300 hover:scale-105"
-                />
-              </div>
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <div className="container mt-[100px] px-4 mx-auto flex flex-col sm:flex-row gap-10 min-h-screen">
+          {/* Left: Product Image */}
+          <div className="w-full sm:w-2/3 md:w-1/2 lg:w-[500px] flex flex-col items-center">
+            <div className="w-full h-[500px] overflow-hidden rounded-xl shadow-lg">
+              <img
+                src={activeImage}
+                loading="lazy"
+                alt={product?.name}
+                className="w-full h-full object-cover rounded-xl transition-transform duration-300 hover:scale-105"
+              />
+            </div>
 
-              {/* Thumbnails */}
-              {product?.image?.length > 1 && (
-                <div className="flex gap-4 mt-5 justify-center flex-wrap">
-                  {product.image.map((img, index) => (
-                    <img
-                      key={index}
-                      src={img.url}
-                      loading="lazy"
-                      alt={`Thumbnail ${index + 1}`}
-                      className={`w-20 h-20 object-cover rounded-md cursor-pointer transition-all duration-200 border-2 ${
-                        img.url === activeImage
-                          ? "border-blue-500 shadow-md opacity-70"
-                          : "border-gray-300 hover:opacity-80"
-                      }`}
-                      onClick={() => setActiveImage(img.url)}
+            {/* Thumbnails */}
+            <div className="flex gap-4 mt-5 justify-center flex-wrap">
+              {(activeVariant?.images?.length > 0 ? activeVariant.images : product?.image).map(
+                (img, idx) => (
+                  <img
+                    key={idx}
+                    src={img.url}
+                    alt={`Thumbnail ${idx + 1}`}
+                    className={clsx(
+                      "w-20 h-20 object-cover rounded-md cursor-pointer transition-all duration-200",
+                      img.url === activeImage
+                        ? "border-2 border-blue-500 opacity-70 shadow-md"
+                        : "border-gray-300 hover:opacity-80"
+                    )}
+                    onClick={() => setActiveImage(img.url)}
+                  />
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Right: Product Info */}
+          <div className="relative flex flex-col rounded-2xl p-8 lg:p-12 w-full sm:w-1/2 md:w-1/2">
+            {product.hasDiscount && (
+              <span className="absolute top-1 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
+                -{(product.discountBy * 100).toFixed(0)}%
+              </span>
+            )}
+
+            <h1 className="text-3xl font-extrabold mb-4">{product?.name}</h1>
+            <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
+
+            {/* Color selection */}
+            {product?.variants?.length > 0 && (
+              <div className="mb-4">
+                <span className="font-semibold block mb-2">Color:</span>
+                <div className="flex gap-3 flex-wrap">
+                  {product.variants.map((variant) => (
+                    <button
+                      key={variant._id}
+                      className={clsx(
+                        "w-8 h-8 rounded-full border-2 transition-transform",
+                        activeVariant?._id === variant._id
+                          ? "border-blue-500 scale-110"
+                          : "border-gray-300 hover:scale-105"
+                      )}
+                      style={{ backgroundColor: variant.color.toLowerCase() }}
+                      onClick={() => {
+                        setActiveVariant(variant);
+                        setActiveImage(variant.images?.[0]?.url || product.image[0]?.url);
+                        setSelectedSize(variant.sizes?.[0] || null);
+                        setCounter(1);
+                      }}
                     />
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Sizes */}
+            {activeVariant?.sizes?.length > 0 && (
+              <div className="mb-6">
+                <span className="font-semibold block mb-2">Sizes:</span>
+                <div className="flex gap-3 flex-wrap">
+                  {activeVariant.sizes.map((s) => (
+                    <span
+                      key={s.size}
+                      className={clsx(
+                        "px-3 py-1 border rounded-full cursor-pointer hover:scale-105",
+                        selectedSize?.size === s.size
+                          ? "bg-blue-500 text-white border-blue-500"
+                          : ""
+                      )}
+                      onClick={() => {
+                        setSelectedSize(s);
+                        setCounter(1);
+                      }}>
+                      {s.size}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Price */}
+            <div className="mb-6">
+              {product.hasDiscount ? (
+                <div className="flex flex-col">
+                  <span className="line-through text-gray-500 text-lg">
+                    {product.price.toFixed(3)} KD
+                  </span>
+                  <span className="text-green-600 font-bold text-3xl">
+                    {product.discountedPrice.toFixed(3)} KD
+                  </span>
+                </div>
+              ) : (
+                <span className="text-3xl font-bold">{product.price.toFixed(3)} KD</span>
               )}
             </div>
 
-            {/* Product Info */}
-            <div className="relative  flex flex-col rounded-2xl p-8 lg:p-12 w-full sm:w-1/2 md:w-1/2">
-              {/* Discount badge */}
-              {oldPrice !== newPrice && (
-                <span className="absolute  top-1 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
-                  -{(((oldPrice - newPrice) / oldPrice) * 100).toFixed(0)}%
-                </span>
-              )}
-
-              <h1 className="text-3xl font-extrabold mb-4">{product?.name}</h1>
-              <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
-
-              {/* Quantity controls */}
-              {product?.countInStock > 0 && (
-                <div className="flex items-center gap-6 mb-6">
-                  <button
-                    onClick={handleDecrement}
-                    className={clsx(
-                      "px-4 py-2 border rounded-md font-bold text-2xl transition-all",
-                      counter === 1
-                        ? "border-gray-400 text-gray-400 cursor-not-allowed"
-                        : "bg-black text-white hover:bg-gray-800"
-                    )}>
-                    -
-                  </button>
-                  <span className="text-2xl font-semibold">{counter}</span>
-                  <button
-                    onClick={handleIncrement}
-                    className={clsx(
-                      "px-4 py-2 border rounded-md font-bold text-2xl transition-all",
-                      counter === product.countInStock
-                        ? "border-gray-400 text-gray-400 cursor-not-allowed"
-                        : "bg-black text-white hover:bg-gray-800"
-                    )}>
-                    +
-                  </button>
-                </div>
-              )}
-
-              {/* Stock info */}
-              <p className="font-semibold text-orange-600 mb-3">
-                {product?.countInStock > 0 &&
-                  product?.countInStock <= 5 &&
-                  `Only ${product.countInStock} left in stock`}
-              </p>
-
-              {/* Price */}
-              <div className="mb-8">
-                {newPrice < oldPrice ? (
-                  <div className="flex flex-col">
-                    <span className="line-through text-gray-500 text-lg">
-                      {oldPrice.toFixed(3)} KD
-                    </span>
-                    <span className="text-green-600 font-bold text-3xl">
-                      {newPrice?.toFixed(3)} KD
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-3xl font-bold">{oldPrice?.toFixed(3)} KD</span>
-                )}
-              </div>
-
-              {/* Add to Cart */}
+            {/* Quantity controls */}
+            <div className="flex items-center gap-6 mb-6">
               <button
+                onClick={handleDecrement}
                 className={clsx(
-                  "px-6 py-4 rounded-xl font-bold uppercase transition-all shadow-md",
-                  product?.countInStock === 0
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-gradient-to-r from-black to-gray-800 text-white hover:from-gray-800 hover:to-black"
-                )}
-                onClick={handleAddToCart}
-                disabled={product?.countInStock === 0}>
-                {product?.countInStock === 0 ? "Out of stock" : "Add to Cart"}
+                  "px-4 py-2 border rounded-md font-bold text-2xl transition-all",
+                  counter === 1
+                    ? "border-gray-400 text-gray-400 cursor-not-allowed"
+                    : "bg-black text-white hover:bg-gray-800"
+                )}>
+                -
+              </button>
+              <span className="text-2xl font-semibold">{counter}</span>
+              <button
+                onClick={handleIncrement}
+                className={clsx(
+                  "px-4 py-2 border rounded-md font-bold text-2xl transition-all",
+                  counter >= stock
+                    ? "border-gray-400 text-gray-400 cursor-not-allowed"
+                    : "bg-black text-white hover:bg-gray-800"
+                )}>
+                +
               </button>
             </div>
-          </>
-        )}
-      </div>
+
+            {/* Add to Cart */}
+            <button
+              className={clsx(
+                "px-6 py-4 rounded-xl font-bold uppercase transition-all shadow-md",
+                stock === 0
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-gradient-to-r from-black to-gray-800 text-white hover:from-gray-800 hover:to-black"
+              )}
+              onClick={handleAddToCart}
+              disabled={stock === 0}>
+              {stock === 0 ? "Out of stock" : "Add to Cart"}
+            </button>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
-
-const findCategoryNameById = (id, nodes) => {
-  if (!id || !Array.isArray(nodes)) return null;
-
-  for (const node of nodes) {
-    if (String(node._id) === String(id)) return node.name;
-    if (node.children) {
-      const result = findCategoryNameById(id, node.children);
-      if (result) return result;
-    }
-  }
-  return null;
-};
 
 export default Product;

@@ -4,65 +4,6 @@ import ProductCard from "./ProductCard";
 import QuickLookModal from "./QuickLookModal";
 import Reveal from "./Reveal";
 import { Link } from "react-router-dom";
-const featuredProducts = [
-  {
-    id: "4",
-    name: "Verde Modular Chair",
-    price: "€4,890",
-    image: "./images/bags.jpg",
-    badge: "New",
-    materials: ["Copper Frame", "Premium Velvet"],
-    swatches: [
-      { name: "Forest Green", color: "#355E3B" },
-      { name: "Sage Green", color: "#9CAF88" },
-      { name: "Copper", color: "#B87333" },
-    ],
-    quickLookImages: [
-      "/green-velvet-modular-chair.png",
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-    ],
-    dimensions: "W: 180cm × D: 90cm × H: 75cm",
-  },
-  {
-    id: "7",
-    name: "Terracotta Cloud Chair",
-    price: "€5,250",
-    image: "./images/chairs.jpg",
-    badge: "New",
-    materials: ["Copper Frame", "Terracotta Velvet"],
-    swatches: [
-      { name: "Terracotta", color: "#E2725B" },
-      { name: "Burnt Orange", color: "#CC5500" },
-      { name: "Copper", color: "#B87333" },
-    ],
-    quickLookImages: [
-      "/terracotta-cloud-chair.png",
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-    ],
-    dimensions: "W: 95cm × D: 85cm × H: 80cm",
-  },
-  {
-    id: "8",
-    name: "Sage Copper Lounge",
-    price: "€4,675",
-    image: "./images/chairs.jpg",
-    badge: "Limited",
-    materials: ["Copper Frame", "Sage Velvet"],
-    swatches: [
-      { name: "Sage Green", color: "#9CAF88" },
-      { name: "Forest Green", color: "#355E3B" },
-      { name: "Copper", color: "#B87333" },
-    ],
-    quickLookImages: [
-      "/sage-copper-lounge-chair.png",
-      "/placeholder.svg?height=600&width=600",
-      "/placeholder.svg?height=600&width=600",
-    ],
-    dimensions: "W: 85cm × D: 90cm × H: 75cm",
-  },
-];
 
 export default function FeaturedProducts({ products }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -77,6 +18,8 @@ export default function FeaturedProducts({ products }) {
     setIsModalOpen(false);
     setSelectedProduct(null);
   };
+
+  console.log("latest products: ", products);
 
   return (
     <section className="py-20 lg:py-32" id="featured-products">

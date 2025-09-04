@@ -3,69 +3,72 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../redux/slices/cartSlice";
 import { toast } from "react-toastify";
 import clsx from "clsx";
-import { useGetDiscountStatusQuery } from "../redux/queries/productApi";
 import { ShoppingCart } from "lucide-react";
+import { useState } from "react";
 
-const findCategoryNameById = (id, nodes) => {
-  if (!id || !Array.isArray(nodes)) return null;
-  for (const node of nodes) {
-    if (String(node._id) === String(id)) return node.name;
-    if (node.children) {
-      const result = findCategoryNameById(id, node.children);
-      if (result) return result;
-    }
-  }
-  return null;
-};
-
-function Product({ product, categoryTree }) {
+function Product({ product }) {
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.cartItems);
-  const { data: discountStatus } = useGetDiscountStatusQuery();
 
-  // ✅ Determine the price (base product or variants)
-  const variantPrices = product.variants?.map((v) => v.price) || [];
-  const basePrice = product.price;
+  const oldPrice = product.price;
+  const newPrice = product.hasDiscount ? product.discountedPrice : oldPrice;
 
-  // If variants exist, use the lowest variant price
-  const oldPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : basePrice;
-  let newPrice = oldPrice;
-
-  // ✅ Apply discount if available
-  if (discountStatus && discountStatus.length > 0) {
-    const applicableDiscount = discountStatus.find((d) =>
-      d.category.includes(findCategoryNameById(product.category, categoryTree || []))
-    );
-    if (applicableDiscount) {
-      newPrice = oldPrice - oldPrice * applicableDiscount.discountBy;
-    }
-  }
+  // Track selected variant & size
+  const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0] || null);
+  const [selectedSize, setSelectedSize] = useState(product.variants?.[0]?.sizes?.[0]?.size || "");
 
   const handleAddToCart = () => {
-    if (product.countInStock === 0) {
-      toast.error("Product is out of stock");
+    if (!selectedVariant) {
+      toast.error("Please select a color");
       return;
     }
-    const productInCart = cartItems.find((p) => p._id === product._id);
-    if (productInCart && productInCart.qty === productInCart.countInStock) {
+    if (!selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+
+    // Find the size object for stock & price
+    const sizeObj = selectedVariant.sizes.find((s) => s.size === selectedSize);
+    if (!sizeObj || sizeObj.stock === 0) {
+      toast.error("This size is out of stock");
+      return;
+    }
+
+    const productInCart = cartItems.find(
+      (p) => p._id === product._id && p.variantId === selectedVariant._id && p.size === selectedSize
+    );
+
+    if (productInCart && productInCart.qty >= sizeObj.stock) {
       return toast.error("Cannot add more", { position: "top-center" });
     }
-    dispatch(addToCart({ ...product, price: newPrice, qty: 1 }));
-    toast.success(`${product.name} added to cart`, { position: "top-center" });
+
+    dispatch(
+      addToCart({
+        ...product,
+        variantId: selectedVariant._id,
+        variantColor: selectedVariant.color,
+        size: selectedSize,
+        price: sizeObj.price || newPrice, // take size-specific price if available
+        qty: 1,
+        image: selectedVariant.images?.[0] || product.image?.[0] || { url: "/placeholder.svg" },
+      })
+    );
+
+    toast.success(`${product.name} (${selectedVariant.color}, ${selectedSize}) added to cart`, {
+      position: "top-center",
+    });
   };
 
-  const categoryName = findCategoryNameById(product.category, categoryTree || []) || "";
-
   return (
-    <div className="flex flex-col bg-white rounded-2xl duration-300 overflow-hidden">
+    <div className="flex flex-col rounded-2xl duration-300 overflow-hidden">
       <Link to={`/products/${product._id}`} className="relative group">
-        {newPrice < oldPrice && (
+        {product.hasDiscount && (
           <span className="absolute top-3 left-3 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full z-10">
-            -{(((oldPrice - newPrice) / oldPrice) * 100).toFixed(0)}%
+            -{(product.discountBy * 100).toFixed(0)}%
           </span>
         )}
         <img
-          src={product?.image[0].url}
+          src={selectedVariant?.images?.[0]?.url || product?.image?.[0]?.url || "/placeholder.svg"}
           alt={product.name}
           className="w-full h-60 sm:h-64 md:h-56 lg:h-60 object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -73,13 +76,53 @@ function Product({ product, categoryTree }) {
 
       <div className="p-4 flex flex-col justify-between h-full">
         <div>
-          <p className="text-gray-500 text-sm mb-1 truncate">{categoryName}</p>
+          <p className="text-gray-500 text-sm mb-1 truncate">{product?.category?.name}</p>
           <h2 className="text-gray-900 font-semibold text-lg truncate">{product.name}</h2>
+
+          {/* Variant Colors */}
+          <div className="mt-2 flex gap-2">
+            {product.variants?.map((variant) => (
+              <button
+                key={variant._id}
+                className={clsx(
+                  "w-6 h-6 rounded-full border-2 transition-all",
+                  selectedVariant?._id === variant._id ? "border-0 scale-110" : "border-gray-300"
+                )}
+                style={{ backgroundColor: variant.color.toLowerCase() }}
+                onClick={() => {
+                  setSelectedVariant(variant);
+                  setSelectedSize(variant.sizes?.[0]?.size || "");
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Sizes */}
+          {selectedVariant && (
+            <div className="mt-2 flex gap-2 flex-wrap">
+              {selectedVariant.sizes?.map((s) => (
+                <button
+                  key={s.size}
+                  disabled={s.stock === 0}
+                  onClick={() => setSelectedSize(s.size)}
+                  className={clsx(
+                    "px-2 py-1 border rounded-full text-sm font-medium transition-colors",
+                    selectedSize === s.size
+                      ? "bg-black text-white border-black"
+                      : "bg-white text-gray-700 border-gray-300",
+                    s.stock === 0 && "opacity-50 cursor-not-allowed"
+                  )}>
+                  {s.size}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Price + Add to Cart */}
         <div className="mt-3 flex items-center justify-between">
-          <div className="text-sm sm:text-lg">
-            {newPrice < oldPrice ? (
+          <div className="text-sm sm:text-base">
+            {product.hasDiscount ? (
               <div className="flex flex-col">
                 <span className="text-gray-400 line-through text-sm">{oldPrice.toFixed(3)} KD</span>
                 <span className="text-green-600 font-bold">{newPrice.toFixed(3)} KD</span>
@@ -91,23 +134,17 @@ function Product({ product, categoryTree }) {
 
           <button
             onClick={handleAddToCart}
-            disabled={product.countInStock === 0}
+            disabled={!selectedSize}
             className={clsx(
               "ml-2 px-3 py-2 rounded-lg font-semibold text-white text-xs lg:text-sm transition-colors duration-300",
-              product.countInStock === 0
+              !selectedSize
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-gradient-to-t from-zinc-900 to-zinc-700 hover:from-zinc-800 hover:to-zinc-600"
             )}>
-            {product.countInStock === 0 ? (
-              "Out of stock"
-            ) : (
-              <p>
-                <p className="md:hidden">
-                  <ShoppingCart />
-                </p>
-                <p className="hidden md:flex">Add to Cart</p>
-              </p>
-            )}
+            <span className="flex items-center gap-1">
+              <ShoppingCart className="w-4 h-4" />
+              <span className="hidden md:inline">Add to Cart</span>
+            </span>
           </button>
         </div>
       </div>

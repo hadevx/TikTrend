@@ -9,28 +9,31 @@ import Product from "../../components/Product";
 import Loader from "../../components/Loader";
 
 function ProductByCategory() {
-  const { category } = useParams();
-  const { data: products, isLoading } = useGetProductsByCategoryQuery(category);
+  const { id } = useParams(); // category ID
+  const { data: products, isLoading } = useGetProductsByCategoryQuery(id);
   const { data: categoryTree } = useGetCategoriesTreeQuery();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("all");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const [showFilters, setShowFilters] = useState(false); // toggle for small screens
 
-  // Find category by name recursively
-  const findCategoryByName = (name, nodes) => {
+  // ----------------------------
+  // Helper functions
+  // ----------------------------
+
+  const findCategoryById = (catId, nodes) => {
     if (!Array.isArray(nodes)) return null;
     for (const node of nodes) {
-      if (node.name.toLowerCase() === name.toLowerCase()) return node;
+      if (String(node._id) === catId) return node;
       if (node.children?.length) {
-        const found = findCategoryByName(name, node.children);
+        const found = findCategoryById(catId, node.children);
         if (found) return found;
       }
     }
     return null;
   };
 
-  // Collect all category IDs under a node recursively
   const collectCategoryIds = (node) => {
     let ids = [String(node?._id)];
     if (node?.children?.length) {
@@ -41,23 +44,19 @@ function ProductByCategory() {
     return ids;
   };
 
-  // Find breadcrumb path (array of categories from root to target)
-  const findCategoryPath = (name, nodes, path = []) => {
+  const findCategoryPath = (catId, nodes, path = []) => {
     if (!Array.isArray(nodes)) return null;
     for (const node of nodes) {
       const newPath = [...path, node];
-      if (node.name.toLowerCase() === name.toLowerCase()) {
-        return newPath;
-      }
+      if (String(node._id) === catId) return newPath;
       if (node.children?.length) {
-        const found = findCategoryPath(name, node.children, newPath);
+        const found = findCategoryPath(catId, node.children, newPath);
         if (found) return found;
       }
     }
     return null;
   };
 
-  // Flatten categories recursively with display name (for indentation)
   const flattenCategories = (nodes, prefix = "") => {
     if (!Array.isArray(nodes)) return [];
     return nodes.flatMap((node) => {
@@ -69,19 +68,20 @@ function ProductByCategory() {
     });
   };
 
-  // Find the main category node
-  const categoryNode = useMemo(
-    () => findCategoryByName(category, categoryTree),
-    [category, categoryTree]
-  );
+  // ----------------------------
+  // Computed values
+  // ----------------------------
 
-  // Breadcrumb path for navigation
+  const categoryNode = useMemo(() => findCategoryById(id, categoryTree), [id, categoryTree]);
   const breadcrumbPath = useMemo(
-    () => findCategoryPath(category, categoryTree) || [],
-    [category, categoryTree]
+    () => findCategoryPath(id, categoryTree) || [],
+    [id, categoryTree]
+  );
+  const allSubCategories = useMemo(
+    () => (categoryNode ? flattenCategories(categoryNode.children || []) : []),
+    [categoryNode]
   );
 
-  // Filter products based on selected subcategory, search, and price
   const filteredProducts = useMemo(() => {
     if (!products || !categoryNode) return [];
 
@@ -89,10 +89,8 @@ function ProductByCategory() {
     if (selectedSubCategory === "all") {
       categoryIds = collectCategoryIds(categoryNode);
     } else {
-      const subCatNode = findCategoryByName(selectedSubCategory, categoryNode.children || []);
-      if (subCatNode) {
-        categoryIds = collectCategoryIds(subCatNode);
-      }
+      const subCatNode = findCategoryById(selectedSubCategory, categoryNode.children || []);
+      if (subCatNode) categoryIds = collectCategoryIds(subCatNode);
     }
 
     return products
@@ -105,12 +103,9 @@ function ProductByCategory() {
       });
   }, [products, categoryNode, selectedSubCategory, searchTerm, priceRange]);
 
-  // Flatten all descendants of the category for subcategory filter buttons
-  const allSubCategories = useMemo(() => {
-    if (!categoryNode) return [];
-    return flattenCategories(categoryNode.children || []);
-  }, [categoryNode]);
-
+  // ----------------------------
+  // Render
+  // ----------------------------
   return (
     <Layout>
       <div className="min-h-screen mt-[70px] py-5 lg:px-28">
@@ -128,9 +123,7 @@ function ProductByCategory() {
                 {idx === breadcrumbPath.length - 1 ? (
                   <span className="capitalize text-gray-800 font-medium">{node.name}</span>
                 ) : (
-                  <Link
-                    to={`/category/${encodeURIComponent(node.name)}`}
-                    className="hover:underline capitalize">
+                  <Link to={`/category/${node._id}`} className="hover:underline capitalize">
                     {node.name}
                   </Link>
                 )}
@@ -139,87 +132,115 @@ function ProductByCategory() {
           </ol>
         </nav>
 
-        <h1 className="text-4xl px-2 font-semibold mb-3 capitalize">{category}:</h1>
+        <h1 className="text-4xl px-2 font-semibold mb-6 capitalize">
+          {categoryNode?.name || "Category"}
+        </h1>
 
-        {/* Filters */}
-        <div className="flex px-2 flex-col md:flex-row gap-3 md:items-center mb-6">
-          {/* Search */}
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border  border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring focus:ring-blue-500 w-full md:w-1/3"
-          />
-
-          {/* Price Range */}
-          <div className="flex gap-2 items-center">
-            <input
-              type="number"
-              placeholder="Min"
-              value={priceRange.min}
-              onChange={(e) => setPriceRange((prev) => ({ ...prev, min: e.target.value }))}
-              className="border border-gray-300 rounded-md px-3 py-2 w-20"
-            />
-            <span>-</span>
-            <input
-              type="number"
-              placeholder="Max"
-              value={priceRange.max}
-              onChange={(e) => setPriceRange((prev) => ({ ...prev, max: e.target.value }))}
-              className="border border-gray-300 rounded-md px-3 py-2 w-20"
-            />
-          </div>
-
-          {/* Subcategory Filter with multi-level */}
-          {allSubCategories.length > 0 && (
-            <div className="flex flex-wrap gap-2 max-w-full overflow-auto">
-              <button
-                onClick={() => setSelectedSubCategory("all")}
-                className={`px-3 py-1 rounded-full border whitespace-nowrap ${
-                  selectedSubCategory === "all"
-                    ? "bg-zinc-900 text-white"
-                    : "bg-white text-gray-700 border-gray-300"
-                }`}>
-                All
-              </button>
-              {allSubCategories.map((sub) => (
-                <button
-                  key={sub.id}
-                  onClick={() => setSelectedSubCategory(sub.name)}
-                  className={`px-3 py-1 rounded-full border whitespace-nowrap ${
-                    selectedSubCategory === sub.name
-                      ? "bg-zinc-900 text-white"
-                      : "bg-white text-gray-700 border-gray-300"
-                  }`}
-                  title={sub.displayName} // helpful for full path tooltip
-                >
-                  {sub.displayName}
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Toggle filter button on small screens */}
+        <div className="lg:hidden mb-4 px-2">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="px-4 py-2 bg-rose-500 text-white rounded-md">
+            {showFilters ? "Hide Filters" : "Show Filters"}
+          </button>
         </div>
 
-        {/* Products */}
-        {isLoading ? (
-          <Loader />
-        ) : filteredProducts.length > 0 ? (
-          <>
-            <p className="mb-10 text-gray-700 px-2">
-              {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
-            </p>
-            <div className="flex flex-wrap gap-2 px-2 lg:items-center  lg:gap-7">
-              {filteredProducts.map((product) => (
-                <div key={product._id} className="w-[210px] md:min-w-[250px] rounded-lg">
-                  <Product product={product} categoryTree={categoryTree || []} />
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar Filters */}
+          {(showFilters || window.innerWidth >= 1024) && (
+            <aside className="w-full lg:w-1/4 p-4 border border-gray-200 rounded-lg bg-white">
+              {/* Search */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Search</label>
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                />
+              </div>
+
+              {/* Price Range */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Price</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={priceRange.min}
+                    onChange={(e) => setPriceRange((prev) => ({ ...prev, min: e.target.value }))}
+                    className="border border-gray-300 rounded-md px-3 py-2 w-1/2"
+                  />
+                  <span>-</span>
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={priceRange.max}
+                    onChange={(e) => setPriceRange((prev) => ({ ...prev, max: e.target.value }))}
+                    className="border border-gray-300 rounded-md px-3 py-2 w-1/2"
+                  />
                 </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="text-center text-gray-500">No products found matching your criteria.</p>
-        )}
+              </div>
+
+              {/* Subcategories */}
+              {allSubCategories.length > 0 && (
+                <div>
+                  <label className="block font-medium mb-2">Subcategories</label>
+                  <ul className="space-y-1">
+                    <li>
+                      <button
+                        onClick={() => setSelectedSubCategory("all")}
+                        className={`w-full text-left px-2 py-1 rounded ${
+                          selectedSubCategory === "all"
+                            ? "bg-rose-500 text-white"
+                            : "hover:bg-gray-100"
+                        }`}>
+                        All
+                      </button>
+                    </li>
+                    {allSubCategories.map((sub) => (
+                      <li key={sub.id}>
+                        <button
+                          onClick={() => setSelectedSubCategory(sub.id)}
+                          className={`w-full text-left px-2 py-1 rounded ${
+                            selectedSubCategory === sub.id
+                              ? "bg-rose-500 text-white"
+                              : "hover:bg-gray-100"
+                          }`}
+                          title={sub.displayName}>
+                          {sub.displayName}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </aside>
+          )}
+
+          {/* Products Grid */}
+          <main className="flex-1">
+            {isLoading ? (
+              <Loader />
+            ) : filteredProducts.length > 0 ? (
+              <>
+                <p className="mb-6 text-gray-700">
+                  {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  {filteredProducts.map((product) => (
+                    <div key={product._id} className="w-[210px] md:min-w-[250px] rounded-lg">
+                      <Product product={product} categoryTree={categoryTree || []} />
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-center text-gray-500">No products found matching your criteria.</p>
+            )}
+          </main>
+        </div>
       </div>
     </Layout>
   );

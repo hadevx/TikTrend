@@ -1,70 +1,21 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Reveal from "./Reveal";
-import { useGetAllProductsQuery, useGetCategoriesTreeQuery } from "../redux/queries/productApi";
-import { Link, useNavigate } from "react-router-dom";
-const collections = [
-  {
-    id: "modern-seating",
-    name: "MODERN SEATING",
-    image: "/modern-armchair-pillows.png",
-    count: "8 pieces",
-  },
-  {
-    id: "modular-design",
-    name: "MODULAR DESIGN",
-    image: "/modular-cushion-bench.png",
-    count: "6 pieces",
-  },
-  {
-    id: "cloud-collection",
-    name: "CLOUD COLLECTION",
-    image: "/cloud-white-sofa.png",
-    count: "4 pieces",
-  },
-  {
-    id: "artistic-pieces",
-    name: "ARTISTIC PIECES",
-    image: "/distressed-artistic-chair.png",
-    count: "5 pieces",
-  },
-  {
-    id: "contemporary",
-    name: "CONTEMPORARY",
-    image: "/green-modular-loveseat.png",
-    count: "7 pieces",
-  },
-  {
-    id: "textural-craft",
-    name: "TEXTURAL CRAFT",
-    image: "/braided-rope-loveseat.png",
-    count: "3 pieces",
-  },
-  {
-    id: "maximalist-art",
-    name: "MAXIMALIST ART",
-    image: "/colorful-patchwork-sofa.png",
-    count: "4 pieces",
-  },
-  {
-    id: "scandinavian-comfort",
-    name: "SCANDINAVIAN COMFORT",
-    image: "/minimalist-boucle-loveseat.png",
-    count: "6 pieces",
-  },
-  {
-    id: "abstract-forms",
-    name: "ABSTRACT FORMS",
-    image: "/abstract-artistic-sofa.png",
-    count: "5 pieces",
-  },
-  {
-    id: "luxury-textures",
-    name: "LUXURY TEXTURES",
-    image: "/textured-cream-loveseat.png",
-    count: "8 pieces",
-  },
-];
+import {
+  useGetAllProductsQuery,
+  useGetCategoriesTreeQuery,
+  useGetMainCategoriesWithCountsQuery,
+} from "../redux/queries/productApi";
+import { useNavigate } from "react-router-dom";
+
+// Helper to capitalize multi-word names
+const capitalizeLabel = (name) =>
+  name
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+// Helper to find category name by ID (nested)
 const findCategoryNameById = (id, nodes) => {
   if (!id || !Array.isArray(nodes)) return null;
   for (const node of nodes) {
@@ -78,45 +29,40 @@ const findCategoryNameById = (id, nodes) => {
 };
 
 export function CollectionStrip() {
-  const { data: products, isLoading, error } = useGetAllProductsQuery();
-
+  const { data: products } = useGetAllProductsQuery();
   const { data: categoryTree } = useGetCategoriesTreeQuery();
+  const { data: mainCategoriesWithCounts } = useGetMainCategoriesWithCountsQuery();
   const navigate = useNavigate();
-  const uniqueCategoryIds = [...new Set(products?.map((product) => product?.category))];
-
-  const mainCategoryIds = uniqueCategoryIds?.filter((id) =>
-    categoryTree?.some((cat) => String(cat._id) === String(id))
-  );
-
-  const cat = mainCategoryIds?.map((id) => {
-    const category = (categoryTree || []).find((c) => c._id === id);
-    console.log(category);
-
-    const name = findCategoryNameById(id, categoryTree || []) || "Unknown";
-    const label = name.charAt(0).toUpperCase() + name.slice(1);
-
-    const categoryProducts = products?.filter((p) => String(p.category) === String(id)) || [];
-    const count = categoryProducts.length;
-
-    // ✅ Show category image first, else first product image, else placeholder
-    const image = category?.image || categoryProducts?.[0]?.image?.[0]?.url || "/placeholder.svg";
-
-    return { id, label, count, image };
-  });
 
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end start"],
   });
-
   const x = useTransform(scrollYProgress, [0, 1], [0, -100]);
 
-  const itemWidth = 320; // 320px (w-80) + 32px gap = 352px per item
-  const totalWidth = collections.length * (itemWidth + 32) - 32; // subtract last gap
-  const containerWidth = typeof window !== "undefined" ? window.innerWidth : 1200;
-  const maxDrag = Math.max(0, totalWidth - containerWidth + 48); // add padding
+  // Prepare main categories with image & counts
+  const categories = (categoryTree || []).map((category) => {
+    const name = category.name || "Unknown";
+    const label = capitalizeLabel(name);
 
+    // Use backend count (includes subcategories)
+    const count =
+      mainCategoriesWithCounts?.find((c) => String(c._id) === String(category._id))?.count || 0;
+
+    // Choose image: category image > first product image > placeholder
+    const firstProduct = products?.find((p) => String(p.category) === String(category._id));
+    const image = category?.image || firstProduct?.image?.[0]?.url || "/fallback.jpg";
+
+    return { id: category._id, label, count, image };
+  });
+
+  const itemWidth = 320; // w-80 + gap
+  const totalWidth = categories.length * (itemWidth + 32) - 32;
+  const containerWidth = typeof window !== "undefined" ? window.innerWidth : 1200;
+  const maxDrag = Math.max(0, totalWidth - containerWidth + 48);
+
+  console.log(categories);
   return (
     <section ref={containerRef} className="py-20 lg:py-32 overflow-hidden">
       <div className="mb-12">
@@ -138,9 +84,9 @@ export function CollectionStrip() {
           drag="x"
           dragConstraints={{ left: -maxDrag, right: 0 }}
           dragElastic={0.1}>
-          {cat.map((collection, index) => (
+          {categories.map((collection) => (
             <motion.div
-              onClick={() => navigate(`/category/${collection.label}`)}
+              onClick={() => navigate(`/category/${collection.id}`)} // Navigate by ID
               key={collection.id}
               className="flex-shrink-0 w-80 group cursor-pointer"
               whileHover={{ scale: 1.02 }}
@@ -151,8 +97,8 @@ export function CollectionStrip() {
                   whileHover={{ filter: "blur(1px)" }}
                   transition={{ duration: 0.3 }}>
                   <img
-                    src={collection.image || "/placeholder.svg"}
-                    alt={collection.name}
+                    src={collection.image}
+                    alt={collection.label}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-all duration-300" />

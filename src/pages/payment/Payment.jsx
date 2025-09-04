@@ -6,18 +6,6 @@ import { HandCoins, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useGetAddressQuery } from "../../redux/queries/userApi";
 import { useGetDeliveryStatusQuery } from "../../redux/queries/productApi";
-/* import {
-  useCreateOrderMutation,
-  usePayOrderMutation,
-  useCreateTapPaymentMutation,
-} from "../../redux/queries/orderApi"; */
-/* import {
-  useUpdateStockMutation,
-  useGetDeliveryStatusQuery,
-  useFetchProductsByIdsMutation,
-} from "../../redux/queries/productApi"; */
-
-// import { clearCart } from "../../redux/slices/cartSlice";
 import clsx from "clsx";
 import { toast } from "react-toastify";
 import { PayPalButtons, FUNDING } from "@paypal/react-paypal-js";
@@ -25,20 +13,12 @@ import { usePayment } from "../../hooks/usePayment";
 
 function Payment() {
   const [paymentMethod, setPaymentMethod] = useState("cash");
-  /*   const dispatch = useDispatch();
-  const navigate = useNavigate(); */
-  // Inside your component
+
   const userInfo = useSelector((state) => state.auth.userInfo);
   const cartItems = useSelector((state) => state.cart.cartItems);
 
   const { data: userAddress, refetch, isLoading } = useGetAddressQuery(userInfo?._id);
   const { data: deliveryStatus } = useGetDeliveryStatusQuery();
-  // const [payOrder] = usePayOrderMutation();
-
-  // const [updateStock, { isLoading: loadingUpdateStock }] = useUpdateStockMutation();
-  // const [fetchProductsByIds, { isLoading: loadingCheck }] = useFetchProductsByIdsMutation();
-
-  // const [createOrder, { isLoading: loadingCreateOrder }] = useCreateOrderMutation();
 
   const handlePaymentChange = (e) => {
     setPaymentMethod(e.target.value);
@@ -54,188 +34,13 @@ function Payment() {
     createPayPalOrder,
   } = usePayment(cartItems, userAddress, paymentMethod, deliveryStatus);
 
-  /* const totalCost = () => {
-    const items = Number(cartItems.reduce((acc, item) => acc + item.price * item.qty, 0));
-    const deliveryFee = Number(Number(deliveryStatus?.[0].shippingFee).toFixed(3));
-    return items + deliveryFee;
-  };
-  const totalAmount = totalCost();
-
-  // Pay with cash
-  const handleCashPayment = async () => {
-    try {
-      // 1️⃣ Get latest product data
-      const productIds = cartItems.map((item) => item._id);
-      const latestProducts = await fetchProductsByIds(productIds).unwrap();
-
-      // 2️⃣ Check stock
-      const outOfStockItems = cartItems.filter((item) => {
-        const product = latestProducts.find((p) => p._id === item._id);
-        return !product || item.qty > product.countInStock;
-      });
-
-      if (outOfStockItems.length > 0) {
-        toast.error(
-          `Some products are out of stock: ${outOfStockItems.map((i) => i.name).join(", ")}`
-        );
-        return;
-      }
-
-      const res = await createOrder({
-        orderItems: cartItems,
-        shippingAddress: userAddress,
-        paymentMethod: paymentMethod,
-        itemsPrice: cartItems.map((item) => item.price)[0],
-        shippingPrice: deliveryStatus?.[0].shippingFee,
-        totalPrice: totalAmount,
-      }).unwrap();
-
-      // Call API to update stock
-      await updateStock({
-        orderItems: cartItems,
-      }).unwrap();
-
-      dispatch(clearCart());
-      toast.success("Order created successfully");
-      navigate(`/order/${res._id}`);
-    } catch (error) {
-      toast.error(error);
-    }
-  };
- */
-  // Called when PayPal transaction is approved
-  /* const handleApprove = async (data, actions) => {
-    const details = await actions.order.capture();
-
-    try {
-      // Create your order in backend after successful payment
-      const orderPayload = {
-        orderItems: cartItems,
-        shippingAddress: userAddress,
-        paymentMethod: paymentMethod,
-        itemsPrice: cartItems.map((item) => item.price)[0],
-        shippingPrice: deliveryStatus?.[0].shippingFee,
-        totalPrice: Number(cartItems.reduce((a, c) => a + c.price * c.qty, 0)),
-      };
-
-      const res = await createOrder(orderPayload).unwrap();
-      await updateStock({ orderItems: cartItems }).unwrap();
-      dispatch(clearCart());
-      toast.success("Order created successfully");
-      navigate(`/order/${res._id}`);
-      // navigate to order page if you want
-    } catch (error) {
-      toast.error("Failed to create order after PayPal payment");
-    }
-  };
- */
-  /* const handleApprove = async (data, actions) => {
-    let pendingOrder;
-
-    try {
-      // 1️⃣ Create order in backend as PENDING (not paid yet)
-      pendingOrder = await createOrder({
-        orderItems: cartItems,
-        shippingAddress: userAddress,
-        paymentMethod: paymentMethod,
-        itemsPrice: cartItems.reduce((acc, item) => acc + item.price * item.qty, 0),
-        shippingPrice: deliveryStatus?.[0].shippingFee,
-        totalPrice: Number(cartItems.reduce((a, c) => a + c.price * c.qty, 0)),
-        isPaid: false,
-      }).unwrap();
-
-      // 2️⃣ Capture PayPal payment
-      const details = await actions.order.capture();
-      const transaction = details.purchase_units[0].payments.captures[0];
-
-      // 3️⃣ Mark order as PAID in backend
-      await payOrder({
-        orderId: pendingOrder._id,
-        paymentResult: {
-          id: transaction.id,
-          status: transaction.status,
-          update_time: transaction.update_time,
-          email_address: details.payer.email_address,
-        },
-      }).unwrap();
-
-      // 4️⃣ Update stock
-      await updateStock({ orderItems: cartItems }).unwrap();
-
-      // 5️⃣ Clear cart & navigate
-      dispatch(clearCart());
-      toast.success("Order created successfully");
-      navigate(`/order/${pendingOrder._id}`);
-    } catch (error) {
-      console.error("Payment/order/stock failed:", error);
-      toast.error("Something went wrong. Please contact support. Payment may have been captured.");
-    }
-  }; */
-
-  /*   const totalCost = () => {
-    const items = Number(cartItems.reduce((acc, item) => acc + item.price * item.qty, 0));
-    const deliveryFee = Number(Number(deliveryStatus?.[0].shippingFee).toFixed(3));
-    return items + deliveryFee;
-  };
-  const totalAmount = totalCost(); // or calculated properly before using in handleApprove */
-  // const [exchangeRate, setExchangeRate] = useState(3.25);
-
-  /* useEffect(() => {
-    const fetchExchangeRate = async () => {
-      try {
-        const storedData = JSON.parse(localStorage.getItem("kwdToUsdRate"));
-        const now = new Date().getTime();
-
-        // Use cached rate if it exists and is <24h old
-        if (storedData && now - storedData.timestamp < 24 * 60 * 60 * 1000) {
-          setExchangeRate(storedData.rate);
-          return;
-        }
-
-        // Otherwise fetch new rate
-        const res = await fetch("https://open.er-api.com/v6/latest/KWD");
-        const data = await res.json();
-
-        if (data?.result === "success") {
-          setExchangeRate(data.rates.USD);
-          localStorage.setItem(
-            "kwdToUsdRate",
-            JSON.stringify({ rate: data.rates.USD, timestamp: now })
-          );
-        } else {
-          toast.error("Failed to fetch exchange rate. Using cached/fallback rate.");
-        }
-      } catch (error) {
-        console.error("Failed to fetch exchange rate:", error);
-        toast.error("Using cached/fallback exchange rate.");
-      }
-    };
-
-    fetchExchangeRate();
-  }, []);
-
-  function convertKWDToUSD(amountInKWD, exchangeRate) {
-    if (typeof amountInKWD !== "number" || amountInKWD < 0) {
-      throw new Error("Invalid amount");
-    }
-    if (typeof exchangeRate !== "number" || exchangeRate <= 0) {
-      throw new Error("Invalid exchange rate");
-    }
-
-    const amountInUSD = amountInKWD * exchangeRate;
-    return amountInUSD;
-  }
-
-  const kwTous = convertKWDToUSD(totalAmount, exchangeRate); */
-
+  console.log(cartItems);
   return (
-    <Layout className="bg-zinc-100">
-      <div className="min-h-screen">
+    <Layout>
+      <div className="min-h-screen lg:mt-[100px]">
         <div className="flex mt-[70px] flex-col-reverse py-10 lg:flex-row gap-5 lg:gap-10 px-5 lg:px-60 lg:mt-5">
           <div className="flex lg:w-[50%] gap-5 flex-col">
-            <Link
-              to="/profile"
-              className="flex bg-white hover:shadow transition-all duration-300 flex-col gap-5 border  p-7   rounded-lg">
+            <div className="flex bg-white shadow transition-all duration-300 flex-col gap-5 border  p-7   rounded-lg">
               <h1 className="font-extrabold text-lg ">Shipping Address</h1>
               <hr />
 
@@ -259,11 +64,11 @@ function Payment() {
                   </div>
                 )}
               </div>
-            </Link>
+            </div>
 
             {/* Payment Method */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border">
-              <h2 className="font-bold text-xl mb-4">Payment Method</h2>
+            <div className="bg-white p-6 rounded-2xl shadow border">
+              <h2 className="font-bold text-lg mb-4">Payment Method</h2>
               <div className="space-y-4">
                 {/* Cash Option */}
                 <label
@@ -342,9 +147,7 @@ function Payment() {
             </div>
           </div>
           {/* ------ */}
-          <Link
-            to="/cart"
-            className="flex hover:shadow transition-all duration-300  lg:w-[50%] flex-col  gap-5 border bg-white p-7  rounded-lg">
+          <div className="flex shadow transition-all duration-300  lg:w-[50%] flex-col  gap-2 border bg-white p-7  rounded-lg">
             <h1 className="font-extrabold text-lg  ">Your Cart</h1>
             <hr />
             <div className="flex gap-20 ">
@@ -354,7 +157,7 @@ function Payment() {
                 <hr />
                 <h1 className="text-gray-700">Total:</h1>
               </div>
-              <div className="flex flex-col gap-2 ">
+              <div className="flex flex-col gap-2 mb-5">
                 <h1 className="font-bold">
                   {cartItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(3)} KD
                 </h1>
@@ -365,20 +168,27 @@ function Payment() {
             </div>
             {cartItems.map((item) => (
               <>
-                <div key={item._id} className="flex items-center mt-5 justify-between">
+                <div key={item._id} className="flex items-center   justify-between">
                   <div className="flex items-center">
                     <img
-                      src={item.image}
-                      alt=""
-                      className="w-20 h-20 bg-white rounded-lg  border-2 object-cover"
+                      src={item?.variantImage?.[0].url || item.image?.[0].url}
+                      alt="product image"
+                      className="w-11 h-11 bg-white rounded-lg   object-cover"
                     />
-                    <p className="px-4 py-2 border-gray-300 text-sm text-gray-800">{item.name}</p>
+                    <p className="px-4 truncate max-w-[100px] sm:max-w-[200px]  text-sm text-gray-800">
+                      {item.name}
+                    </p>
+                    {item.variants.length > 0 && (
+                      <p className="px-4   text-sm text-gray-800">
+                        {item.variantColor + "/" + item.variantSize}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <p className="px-4 py-2 border-gray-300 text-sm text-gray-800">
+                    <p className="px-4   text-sm text-gray-800">
                       {item.qty} x {item.price.toFixed(3)} KD
                     </p>
-                    <p className="px-4 py-2 border-gray-300 text-sm text-gray-800">
+                    <p className="px-4   text-sm text-gray-800">
                       {(item.qty * item.price).toFixed(3)} KD
                     </p>
                   </div>
@@ -386,7 +196,7 @@ function Payment() {
                 <hr />
               </>
             ))}
-          </Link>
+          </div>
         </div>
       </div>
     </Layout>

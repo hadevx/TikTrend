@@ -1,14 +1,7 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import BlurPanel from "./BlurPanel";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import clsx from "clsx";
-import { useGetDiscountStatusQuery, useGetCategoriesTreeQuery } from "../redux/queries/productApi";
 
 export default function ProductCard({ product, onQuickLook }) {
-  console.log(new Date(product.createdAt));
-  const { data: categoryTree } = useGetCategoriesTreeQuery();
   const isNew = () => {
     const createdDate = new Date(product.createdAt);
     const now = new Date();
@@ -16,45 +9,20 @@ export default function ProductCard({ product, onQuickLook }) {
     return diffDays <= 3; // product is new if within 3 days
   };
 
-  console.log(product);
   const isLimited = () => {
     return product.countInStock < 5;
   };
-  const findCategoryNameById = (id, nodes) => {
-    if (!id || !Array.isArray(nodes)) return null;
-    for (const node of nodes) {
-      if (String(node._id) === String(id)) return node.name;
-      if (node.children) {
-        const result = findCategoryNameById(id, node.children);
-        if (result) return result;
-      }
-    }
-    return null;
-  };
-  const { data: discountStatus } = useGetDiscountStatusQuery();
-  const oldPrice = product.price;
-  let newPrice = oldPrice;
 
-  if (discountStatus && discountStatus.length > 0) {
-    const applicableDiscount = discountStatus.find((d) =>
-      d.category.includes(findCategoryNameById(product.category, categoryTree || []))
-    );
-    if (applicableDiscount) {
-      newPrice = oldPrice - oldPrice * applicableDiscount.discountBy;
-    }
-  }
+  const oldPrice = product.price;
+  const newPrice = product.hasDiscount ? product.discountedPrice : oldPrice;
+
   return (
     <Link to={`/products/${product._id}`}>
       <motion.div
-        //   onClick={() => onQuickLook(product)} // 👈 trigger QuickLookModal
-        className="group relative  bg-white overflow-hidden cursor-pointer"
-        style={{
-          borderRadius: "24px",
-          boxShadow: "rgba(0, 0, 0, 0.1) 0px 10px 50px",
-        }}
+        className="group relative bg-white overflow-hidden cursor-pointer"
+        style={{ borderRadius: "24px", boxShadow: "rgba(0, 0, 0, 0.1) 0px 10px 50px" }}
         layout>
-        {/* Badge */}
-
+        {/* Badges */}
         <div className="absolute top-4 left-4 z-20">
           {isLimited() && (
             <span className="px-3 py-1 text-xs mr-2 bg-amber-500/90 text-white font-medium rounded-full backdrop-blur-sm">
@@ -76,7 +44,7 @@ export default function ProductCard({ product, onQuickLook }) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}>
             <img
-              src={product.image[0].url || "/placeholder.svg"}
+              src={product.image[0]?.url || "/placeholder.svg"}
               alt={product.name}
               className="object-cover w-full h-full"
             />
@@ -88,11 +56,8 @@ export default function ProductCard({ product, onQuickLook }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/40 to-transparent" />
           <div className="relative z-10">
             <h3 className="text-sm lg:text-xl font-semibold text-white mb-1">{product.name}</h3>
-            {/*    <span className="text-sm lg:text-2xl font-bold text-white">
-              {product.price.toFixed(3)} KD
-            </span> */}
             <div className="text-sm sm:text-lg">
-              {newPrice < oldPrice ? (
+              {product.hasDiscount ? (
                 <div className="flex flex-col">
                   <span className="text-gray-300 line-through text-sm">
                     {oldPrice.toFixed(3)} KD

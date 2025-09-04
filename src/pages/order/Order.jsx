@@ -30,6 +30,7 @@ const Order = () => {
   const handlePdf = () => {
     toPDF();
   };
+  console.log(order?.orderItems);
   return (
     <Layout>
       <div className="container mt-[70px] mx-auto p-4   min-h-screen">
@@ -65,6 +66,7 @@ const Order = () => {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-2">Product</th>
+                    <th className="text-left py-2">Variants</th>
                     <th className="text-center py-2">Quantity</th>
                     <th className="text-right py-2">Price</th>
                     <th className="text-right py-2">Total</th>
@@ -73,7 +75,21 @@ const Order = () => {
                 <tbody>
                   {order?.orderItems?.map((item) => (
                     <tr key={item._id} className="border-b text-sm">
-                      <td className="py-2">{item.name}</td>
+                      <td className="py-2 truncate flex items-center gap-2 max-w-[120px] sm:max-w-[200px]">
+                        <img
+                          src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
+                          alt={item.name}
+                          className="w-12 h-12 lg:w-14 lg:h-14 bg-zinc-100/50 border-2 object-cover rounded-xl"
+                        />
+                        <p className="truncate"> {item.name}</p>
+                      </td>
+                      {item.variantColor || item.size ? (
+                        <td className="py-2">
+                          {item.variantColor} / {item.variantSize}
+                        </td>
+                      ) : (
+                        <td className="py-2">-</td>
+                      )}
                       <td className="text-center py-2">{item.qty}</td>
                       <td className="text-right py-2">{item.price.toFixed(3)} KD</td>
                       <td className="text-right py-2">{(item.qty * item.price).toFixed(3)} KD</td>

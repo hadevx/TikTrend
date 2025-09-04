@@ -13,43 +13,46 @@ import Lottie from "lottie-react";
 import empty from "./empty.json";
 
 function Cart() {
-  // Local state for tracking quantity dropdown selection
-  const [selectedValue, setSelectedValue] = useState(1);
-
-  // Fetch delivery status (shipping fee, delivery time, etc.)
-  const { data: deliveryStatus } = useGetDeliveryStatusQuery();
-
-  // Fetch all products (used for validating cart items)
-  const { data: products } = useGetAllProductsQuery();
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Redux state selectors
-  const cartItems = useSelector((state) => state?.cart.cartItems);
-  const userInfo = useSelector((state) => state?.auth.userInfo);
+  const cartItems = useSelector((state) => state.cart.cartItems);
+  const userInfo = useSelector((state) => state.auth.userInfo);
 
-  // Fetch user address if logged in
+  const { data: deliveryStatus } = useGetDeliveryStatusQuery();
+  const { data: products } = useGetAllProductsQuery();
   const { data: userAddress } = useGetAddressQuery(userInfo?._id);
 
-  const handleRemove = (id) => {
-    dispatch(removeFromCart(id));
+  // Remove non-existing products from cart
+  useEffect(() => {
+    if (products && cartItems.length > 0) {
+      const validKeys = new Set([
+        // Variant products
+        ...products.flatMap((p) =>
+          p.variants.flatMap((v) => v.sizes.map((s) => `${p._id}-${v._id}-${s.size}`))
+        ),
+        // Non-variant products
+        ...products.filter((p) => !p.variants?.length).map((p) => `${p._id}-null-null`),
+      ]);
+
+      cartItems.forEach((item) => {
+        const key = `${item._id}-${item.variantId ?? "null"}-${item.variantSize ?? "null"}`;
+        if (!validKeys.has(key)) {
+          dispatch(removeFromCart(item));
+        }
+      });
+    }
+  }, [products, cartItems, dispatch]);
+
+  const handleRemove = (item) => {
+    dispatch(removeFromCart(item));
   };
 
   const handleChange = (e, item) => {
-    setSelectedValue(e.target.value);
-    const newQty = e.target.value;
-
-    // Update the cart with new quantity
-    dispatch(updateCart({ _id: item._id, qty: Number(newQty) }));
+    const newQty = Number(e.target.value);
+    dispatch(updateCart({ ...item, qty: newQty }));
   };
 
-  /**
-   * Navigate to payment page
-   * - If not logged in → redirect to login
-   * - If no address → redirect to address page
-   * - Otherwise → go to payment
-   */
   const handleGoToPayment = () => {
     if (!userInfo) {
       navigate("/login");
@@ -64,44 +67,19 @@ function Cart() {
     navigate("/payment");
   };
 
-  /**
-   * Calculate total cart cost including shipping fee
-   */
   const totalCost = () => {
-    const items = Number(cartItems.reduce((acc, item) => acc + item.price * item.qty, 0));
-    const deliveryFee = Number(Number(deliveryStatus?.[0].shippingFee).toFixed(3));
-    return items + deliveryFee;
+    const itemsTotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const deliveryFee = Number(deliveryStatus?.[0]?.shippingFee ?? 0);
+    return itemsTotal + deliveryFee;
   };
-
-  /**
-   * useEffect: Remove cart items that no longer exist in the product list
-   */
-  useEffect(() => {
-    if (products && cartItems.length > 0) {
-      // Build a set of valid product IDs from fetched products
-      const validProductIds = new Set(products.map((p) => p._id));
-
-      // Filter out cart items not found in product list
-      const filteredCart = cartItems?.filter((item) => validProductIds.has(item._id));
-
-      // Remove invalid cart items
-      if (filteredCart.length !== cartItems.length) {
-        const removedItems = cartItems.filter((item) => !validProductIds.has(item._id));
-        removedItems.forEach((item) => {
-          dispatch(removeFromCart(item._id));
-        });
-      }
-    }
-  }, [products, cartItems, dispatch]);
 
   return (
     <Layout>
-      <div className="px-4 lg:px-52   mt-[100px] lg:mt-20 min-h-screen flex gap-5 lg:gap-10 flex-col lg:flex-row lg:justify-between">
-        {/* Cart Table Section */}
+      <div className="px-4 lg:px-52 mt-[100px] lg:mt-32 min-h-screen flex gap-5 lg:gap-10 flex-col lg:flex-row lg:justify-between">
+        {/* Cart Table */}
         <div className="w-full lg:w-[1000px]">
           <h1 className="font-bold text-3xl mb-5">Cart</h1>
 
-          {/* Show empty cart message if no items */}
           {cartItems?.length === 0 ? (
             <>
               <Message dismiss={false}>Your cart is empty</Message>
@@ -120,6 +98,9 @@ function Cart() {
                     Name
                   </th>
                   <th className="px-2 lg:px-4 py-2 border-b border-gray-300 text-left text-sm font-extrabold text-gray-600">
+                    Variant
+                  </th>
+                  <th className="px-2 lg:px-4 py-2 border-b border-gray-300 text-left text-sm font-extrabold text-gray-600">
                     Price
                   </th>
                   <th className="px-2 lg:px-4 py-2 border-b border-gray-300 text-left text-sm font-extrabold text-gray-600">
@@ -129,102 +110,98 @@ function Cart() {
                     Total
                   </th>
                   <th className="px-2 lg:px-4 py-2 lg:border-b lg:border-gray-300"></th>
-                  {/* <th className="px-2 lg:px-4 py-2 border-b border-gray-300"></th> */}
                 </tr>
               </thead>
               <tbody>
-                {cartItems?.map((item) => (
-                  <tr key={item._id} className="hover:bg-zinc-100/40">
-                    {/* Product Image */}
-                    <td className="px-0 lg:px-4 py-10 border-b border-gray-300">
-                      <Link to={`/products/${item._id}`}>
-                        <img
-                          src={item.image[0].url}
-                          alt={item.name}
-                          className="w-16 h-16 lg:w-24 lg:h-24 bg-zinc-100/50 border-2 object-cover rounded-xl"
-                        />
-                      </Link>
-                    </td>
+                {cartItems.map((item, idx) => {
+                  const stock = item.stock ?? 0; // Always use stock if available
+                  return (
+                    <tr
+                      key={`${item._id}-${item.variantId ?? "null"}-${
+                        item.variantSize ?? "null"
+                      }-${idx}`}
+                      className="hover:bg-zinc-100/40">
+                      {/* Product Image */}
+                      <td className="px-0 lg:px-4 py-10 border-b border-gray-300">
+                        <Link to={`/products/${item._id}`}>
+                          <img
+                            src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
+                            alt={item.name}
+                            className="w-16 h-16 lg:w-24 lg:h-24 bg-zinc-100/50 border-2 object-cover rounded-xl"
+                          />
+                        </Link>
+                      </td>
 
-                    {/* Product Name */}
-                    <td className="px-2 lg:px-4 py-2 w-[200px] border-b border-gray-300 text-sm text-gray-800">
-                      {item.name}
-                    </td>
+                      <td className="px-2 lg:px-4 py-2 w-[200px] border-b border-gray-300 text-sm text-gray-800">
+                        {item.name}
+                      </td>
 
-                    {/* Price */}
-                    <td className="px-2 lg:px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
-                      {item?.price.toFixed(3)} KD
-                    </td>
+                      <td className="px-2 lg:px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
+                        {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
+                      </td>
 
-                    {/* Quantity Selector */}
-                    <td className=" lg:px-4 py-2 border-b border-gray-300">
-                      <select
-                        value={item.qty}
-                        onChange={(e) => handleChange(e, item)}
-                        className="border bg-zinc-100/50 lg:w-[100px] p-2 rounded focus:border-blue-500">
-                        {[...Array(item.countInStock).keys()].map((x) => (
-                          <option key={x + 1} value={x + 1}>
-                            {x + 1}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                      <td className="px-2 lg:px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
+                        {item.price.toFixed(3)} KD
+                      </td>
 
-                    {/* Total per product */}
-                    <td className="px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
-                      {(item.price * item.qty).toFixed(3)} KD
-                    </td>
+                      <td className="lg:px-4 py-2 border-b border-gray-300">
+                        <select
+                          value={item.qty}
+                          onChange={(e) => handleChange(e, item)}
+                          disabled={stock === 0}
+                          className="border bg-zinc-100/50 lg:w-[100px] p-2 rounded focus:border-blue-500">
+                          {[...Array(stock).keys()].map((x) => (
+                            <option key={x + 1} value={x + 1}>
+                              {x + 1}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
 
-                    {/* Remove Button */}
-                    <td className="lg:px-4 py-2 lg:border-b lg:border-gray-300">
-                      <button
-                        onClick={() => handleRemove(item._id)}
-                        className="text-black transition-all duration-300 hover:bg-zinc-200 hover:text-red-500 p-2 rounded-lg">
-                        <Trash2 strokeWidth={2} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
+                        {(item.price * item.qty).toFixed(3)} KD
+                      </td>
+
+                      <td className="lg:px-4 py-2 lg:border-b lg:border-gray-300">
+                        <button
+                          onClick={() => handleRemove(item)}
+                          className="text-black transition-all duration-300 hover:bg-zinc-200 hover:text-red-500 p-2 rounded-lg">
+                          <Trash2 strokeWidth={2} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
         </div>
 
-        {/* Cart Summary Section */}
+        {/* Cart Summary */}
         <div className="rounded-3xl lg:w-[600px] px-2 lg:px-20">
           <h1 className="font-bold text-3xl mb-5">Summary</h1>
           <div className="w-full border border-gray-500/20 mb-5"></div>
 
           <div className="flex flex-col gap-5">
-            {/* Subtotal */}
             <div className="flex justify-between">
               <p>Subtotal:</p>
-              <p>
-                {cartItems?.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(3)} KD
-              </p>
+              <p>{cartItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(3)} KD</p>
             </div>
 
-            {/* Shipping */}
             <div className="flex justify-between">
               <p className="flex gap-2">
                 Delivery: <Truck strokeWidth={1} />
               </p>
-              {deliveryStatus?.[0].shippingFee ? (
-                <p>{deliveryStatus?.[0].shippingFee?.toFixed(3)} KD</p>
-              ) : (
-                <p>Free</p>
-              )}
+              <p>{deliveryStatus?.[0].shippingFee?.toFixed(3) ?? "Free"} KD</p>
             </div>
 
-            {/* Delivery Time */}
             <div className="flex justify-between">
-              <p className="flex gap-2">Expected delivery:</p>
+              <p>Expected delivery:</p>
               <p className="uppercase">{deliveryStatus?.[0].timeToDeliver}</p>
             </div>
 
             <div className="w-full border border-gray-500/20 mb-5"></div>
 
-            {/* Total */}
             <div className="flex justify-between">
               <p>Total:</p>
               <p>{totalCost().toFixed(3)} KD</p>
@@ -232,26 +209,21 @@ function Cart() {
 
             {cartItems.length > 0 && totalCost() < deliveryStatus?.[0].minDeliveryCost && (
               <div className="p-3 bg-rose-50 rounded-lg text-rose-500 font-bold">
-                The minimum required cost should be {deliveryStatus?.[0].minDeliveryCost.toFixed(3)}{" "}
-                KD
+                Minimum order: {deliveryStatus?.[0].minDeliveryCost.toFixed(3)} KD
               </div>
             )}
-            {/* Go to Payment Button */}
-            <div>
-              <button
-                onClick={handleGoToPayment}
-                disabled={
-                  cartItems.length === 0 || totalCost() < deliveryStatus?.[0].minDeliveryCost
-                }
-                className={clsx(
-                  "bg-gradient-to-t mt-5 mb-10 text-white p-3 rounded-lg w-full font-bold",
-                  cartItems.length === 0 || totalCost() < deliveryStatus?.[0].minDeliveryCost
-                    ? "from-zinc-300 to-zinc-200 border"
-                    : "from-zinc-900 to-zinc-700 hover:bg-gradient-to-b"
-                )}>
-                Go to payment
-              </button>
-            </div>
+
+            <button
+              onClick={handleGoToPayment}
+              disabled={cartItems.length === 0 || totalCost() < deliveryStatus?.[0].minDeliveryCost}
+              className={clsx(
+                "bg-gradient-to-t mt-5 mb-10 text-white p-3 rounded-lg w-full font-bold",
+                cartItems.length === 0 || totalCost() < deliveryStatus?.[0].minDeliveryCost
+                  ? "from-zinc-300 to-zinc-200 border"
+                  : "from-zinc-900 to-zinc-700 hover:bg-gradient-to-b"
+              )}>
+              Go to payment
+            </button>
           </div>
         </div>
       </div>

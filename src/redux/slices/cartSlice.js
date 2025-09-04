@@ -11,48 +11,84 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, action) => {
-      const newProduct = action.payload;
+      const newProduct = {
+        ...action.payload,
+        variantId: action.payload.variantId || null,
+        variantSize: action.payload.variantSize || null,
+      };
 
-      const existingProduct = state.cartItems.find((product) => product._id === newProduct._id);
+      // Unique key = productId + variantId + size
+      const existingProduct = state.cartItems.find(
+        (product) =>
+          product._id === newProduct._id &&
+          product.variantId === newProduct.variantId &&
+          product.variantSize === newProduct.variantSize
+      );
 
       if (existingProduct) {
+        // Increase quantity if stock allows
         state.cartItems = state.cartItems.map((product) =>
-          product._id === existingProduct._id
+          product._id === newProduct._id &&
+          product.variantId === newProduct.variantId &&
+          product.variantSize === newProduct.variantSize
             ? { ...product, qty: product.qty + newProduct.qty }
             : product
         );
       } else {
-        state.cartItems = [...state.cartItems, newProduct];
+        state.cartItems.push(newProduct);
       }
 
       localStorage.setItem("cart", JSON.stringify(state.cartItems));
     },
-    updateCart: (state, action) => {
-      const { _id, qty } = action.payload;
 
-      // Find the product in the cart
-      const existingProduct = state.cartItems.find((product) => product._id === _id);
+    updateCart: (state, action) => {
+      const { _id, variantId = null, variantSize = null, qty } = action.payload;
+
+      const existingProduct = state.cartItems.find(
+        (product) =>
+          product._id === _id &&
+          product.variantId === variantId &&
+          product.variantSize === variantSize
+      );
 
       if (existingProduct) {
-        // If qty is zero, remove the item from the cart
         if (qty === 0) {
-          state.cartItems = state.cartItems.filter((product) => product._id !== _id);
+          state.cartItems = state.cartItems.filter(
+            (product) =>
+              !(
+                product._id === _id &&
+                product.variantId === variantId &&
+                product.variantSize === variantSize
+              )
+          );
         } else {
-          // Update the quantity of the existing product
           state.cartItems = state.cartItems.map((product) =>
-            product._id === _id ? { ...product, qty } : product
+            product._id === _id &&
+            product.variantId === variantId &&
+            product.variantSize === variantSize
+              ? { ...product, qty }
+              : product
           );
         }
       }
 
-      // Update local storage
       localStorage.setItem("cart", JSON.stringify(state.cartItems));
     },
+
     removeFromCart: (state, action) => {
-      state.cartItems = state.cartItems.filter((item) => item._id !== action.payload);
+      const { _id, variantId = null, variantSize = null } = action.payload;
+      state.cartItems = state.cartItems.filter(
+        (product) =>
+          !(
+            product._id === _id &&
+            product.variantId === variantId &&
+            product.variantSize === variantSize
+          )
+      );
       localStorage.setItem("cart", JSON.stringify(state.cartItems));
     },
-    clearCart: (state, action) => {
+
+    clearCart: (state) => {
       state.cartItems = [];
       localStorage.setItem("cart", JSON.stringify(state.cartItems));
     },

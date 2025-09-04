@@ -19,8 +19,8 @@ export const productApi = apiSlice.injectEndpoints({
       }),
     }),
     getProductsByCategory: builder.query({
-      query: (category) => ({
-        url: `/api/products/category/${category}`,
+      query: (id) => ({
+        url: `/api/products/category/${id}`,
       }),
     }),
     updateStock: builder.mutation({
@@ -57,6 +57,11 @@ export const productApi = apiSlice.injectEndpoints({
         body: { productIds },
       }),
     }),
+    getMainCategoriesWithCounts: builder.query({
+      query: () => ({
+        url: "/api/category/main-cat-count",
+      }),
+    }),
   }),
 });
 
@@ -71,4 +76,5 @@ export const {
   useGetCategoriesTreeQuery,
   useGetAllProductsQuery,
   useFetchProductsByIdsMutation,
+  useGetMainCategoriesWithCountsQuery,
 } = productApi;
