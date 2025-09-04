@@ -123,11 +123,11 @@ function Product() {
 
           {/* Right: Product Info */}
           <div className="relative flex flex-col rounded-2xl p-8 lg:p-12 w-full sm:w-1/2 md:w-1/2">
-            {product.hasDiscount && (
+            {/*  {product.hasDiscount && (
               <span className="absolute top-1 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
                 -{(product.discountBy * 100).toFixed(0)}%
               </span>
-            )}
+            )} */}
 
             <h1 className="text-3xl font-extrabold mb-4">{product?.name}</h1>
             <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
