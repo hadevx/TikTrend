@@ -68,6 +68,15 @@ export default function ProductCard({ product, onQuickLook }) {
                 <span className="text-white font-bold">{oldPrice.toFixed(3)} KD</span>
               )}
             </div>
+            {/* Quick Look button */}
+            {/*   <button
+              onClick={(e) => {
+                e.preventDefault(); // prevent navigating to product page
+                onQuickLook(product);
+              }}
+              className="mt-3 px-4 py-2 bg-white text-black text-sm font-medium rounded-full hover:bg-neutral-200 transition">
+              Quick Look
+            </button> */}
           </div>
         </div>
       </motion.div>

@@ -62,7 +62,6 @@ export function CollectionStrip() {
   const containerWidth = typeof window !== "undefined" ? window.innerWidth : 1200;
   const maxDrag = Math.max(0, totalWidth - containerWidth + 48);
 
-  console.log(categories);
   return (
     <section ref={containerRef} className="py-20 lg:py-32 overflow-hidden">
       <div className="mb-12">
@@ -84,7 +83,7 @@ export function CollectionStrip() {
           drag="x"
           dragConstraints={{ left: -maxDrag, right: 0 }}
           dragElastic={0.1}>
-          {categories.map((collection) => (
+          {categories?.map((collection) => (
             <motion.div
               onClick={() => navigate(`/category/${collection.id}`)} // Navigate by ID
               key={collection.id}

@@ -73,18 +73,18 @@ function Product({ product }) {
       <div className="p-4 flex flex-col justify-between h-full">
         <div>
           <p className="text-gray-500 text-sm mb-1 truncate">{product?.category?.name}</p>
-          <h2 className="text-gray-900 font-semibold text-lg truncate">{product.name}</h2>
+          <h2 className="text-gray-900 font-semibold text-lg truncate">{product?.name}</h2>
 
           {/* Variant Colors */}
           <div className="mt-2 flex gap-1">
-            {product.variants?.map((variant) => (
+            {product?.variants?.map((variant) => (
               <button
                 key={variant._id}
                 className={clsx(
                   "w-6 h-6 rounded-full border-2 transition-all",
                   selectedVariant?._id === variant._id ? "border-0 scale-110" : "border-gray-300"
                 )}
-                style={{ backgroundColor: variant.color.toLowerCase() }}
+                style={{ backgroundColor: variant?.color?.toLowerCase() }}
                 onClick={() => {
                   setSelectedVariant(variant);
                   setSelectedSize(variant.sizes?.[0]?.size || "");
@@ -96,7 +96,7 @@ function Product({ product }) {
           {/* Sizes */}
           {selectedVariant && (
             <div className="mt-2 flex gap-2 flex-wrap">
-              {selectedVariant.sizes?.map((s) => (
+              {selectedVariant?.sizes?.map((s) => (
                 <button
                   key={s.size}
                   disabled={s.stock === 0}

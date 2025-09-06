@@ -4,8 +4,9 @@ import ProductCard from "./ProductCard";
 import QuickLookModal from "./QuickLookModal";
 import Reveal from "./Reveal";
 import { Link } from "react-router-dom";
+import Loader from "./Loader";
 
-export default function FeaturedProducts({ products }) {
+export default function FeaturedProducts({ products, isLoading }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,9 +20,9 @@ export default function FeaturedProducts({ products }) {
     setSelectedProduct(null);
   };
 
-  console.log("latest products: ", products);
-
-  return (
+  return isLoading ? (
+    <Loader />
+  ) : (
     <section className="py-20 lg:py-32" id="featured-products">
       <div className="container-custom">
         <Reveal>
@@ -49,9 +50,9 @@ export default function FeaturedProducts({ products }) {
               },
             },
           }}>
-          {products?.slice(0, 3).map((product, index) => (
+          {products?.map((product, index) => (
             <motion.div
-              key={product.id}
+              key={product._id}
               variants={{
                 hidden: { opacity: 0, y: 30 },
                 visible: {

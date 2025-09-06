@@ -146,10 +146,10 @@ function Product() {
                           ? "border-blue-500 scale-110"
                           : "border-gray-300 hover:scale-105"
                       )}
-                      style={{ backgroundColor: variant.color.toLowerCase() }}
+                      style={{ backgroundColor: variant?.color?.toLowerCase() }}
                       onClick={() => {
                         setActiveVariant(variant);
-                        setActiveImage(variant.images?.[0]?.url || product.image[0]?.url);
+                        setActiveImage(variant.images?.[0]?.url || product.image?.[0]?.url);
                         setSelectedSize(variant.sizes?.[0] || null);
                         setCounter(1);
                       }}
@@ -164,7 +164,7 @@ function Product() {
               <div className="mb-6">
                 <span className="font-semibold block mb-2">Sizes:</span>
                 <div className="flex gap-3 flex-wrap">
-                  {activeVariant.sizes.map((s) => (
+                  {activeVariant?.sizes?.map((s) => (
                     <span
                       key={s.size}
                       className={clsx(
@@ -189,14 +189,14 @@ function Product() {
               {product.hasDiscount ? (
                 <div className="flex flex-col">
                   <span className="line-through text-gray-500 text-lg">
-                    {product.price.toFixed(3)} KD
+                    {product?.price?.toFixed(3)} KD
                   </span>
                   <span className="text-green-600 font-bold text-3xl">
-                    {product.discountedPrice.toFixed(3)} KD
+                    {product?.discountedPrice?.toFixed(3)} KD
                   </span>
                 </div>
               ) : (
-                <span className="text-3xl font-bold">{product.price.toFixed(3)} KD</span>
+                <span className="text-3xl font-bold">{product?.price?.toFixed(3)} KD</span>
               )}
             </div>
 

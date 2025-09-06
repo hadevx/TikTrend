@@ -171,7 +171,7 @@ function Payment() {
                 <div key={item._id} className="flex items-center   justify-between">
                   <div className="flex items-center">
                     <img
-                      src={item?.variantImage?.[0].url || item.image?.[0].url}
+                      src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
                       alt="product image"
                       className="w-11 h-11 bg-white rounded-lg   object-cover"
                     />

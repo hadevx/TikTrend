@@ -1,23 +1,34 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
 import { X, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import BlurPanel from "./BlurPanel";
 
 export default function QuickLookModal({ product, isOpen, onClose }) {
+  if (!isOpen || !product) return null;
+
+  // ✅ Use product.image array (fallback if empty)
+  const images = product.image?.map((img) => img.url) || ["/placeholder.svg"];
+
+  // ✅ Extract swatches from product.variants (assume each variant has a color)
+  const swatches =
+    product.variants?.map((variant) => ({
+      name: variant.color || "Unknown",
+      color: variant.color || "#ccc",
+    })) || [];
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedSwatch, setSelectedSwatch] = useState(0);
 
-  if (!product) return null;
-
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % product.quickLookImages.length);
+    if (images.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }
   };
 
   const prevImage = () => {
-    setCurrentImageIndex(
-      (prev) => (prev - 1 + product.quickLookImages.length) % product.quickLookImages.length
-    );
+    if (images.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    }
   };
 
   return (
@@ -45,15 +56,13 @@ export default function QuickLookModal({ product, isOpen, onClose }) {
                 <div className="relative">
                   <div className="relative aspect-square rounded-lg overflow-hidden mb-4">
                     <img
-                      src={product.quickLookImages[currentImageIndex] || "/placeholder.svg"}
+                      src={images[currentImageIndex]}
                       alt={`${product.name} - Image ${currentImageIndex + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover w-full h-full"
                     />
 
                     {/* Navigation Arrows */}
-                    {product.quickLookImages.length > 1 && (
+                    {images.length > 1 && (
                       <>
                         <button
                           className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all duration-200"
@@ -71,7 +80,7 @@ export default function QuickLookModal({ product, isOpen, onClose }) {
 
                   {/* Image Thumbnails */}
                   <div className="flex gap-2">
-                    {product.quickLookImages.map((image, index) => (
+                    {images.map((image, index) => (
                       <button
                         key={index}
                         className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
@@ -79,11 +88,9 @@ export default function QuickLookModal({ product, isOpen, onClose }) {
                         }`}
                         onClick={() => setCurrentImageIndex(index)}>
                         <img
-                          src={image || "/placeholder.svg"}
+                          src={image}
                           alt={`${product.name} thumbnail ${index + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="64px"
+                          className="object-cover w-full h-full"
                         />
                       </button>
                     ))}
@@ -95,7 +102,7 @@ export default function QuickLookModal({ product, isOpen, onClose }) {
                   <div className="flex items-start justify-between mb-6">
                     <div>
                       <h2 className="text-3xl font-bold text-neutral-900 mb-2">{product.name}</h2>
-                      {/* <p className="text-lg text-neutral-600">{product.materials.join(", ")}</p> */}
+                      <p className="text-neutral-600">{product.description}</p>
                     </div>
                     <button
                       className="p-2 hover:bg-neutral-100 rounded-full transition-colors duration-200"
@@ -106,46 +113,37 @@ export default function QuickLookModal({ product, isOpen, onClose }) {
 
                   <div className="space-y-6 flex-1">
                     {/* Price */}
-                    <div className="text-2xl font-bold text-neutral-900">{product.price}</div>
+                    <div className="text-2xl font-bold text-neutral-900">${product.price}</div>
 
-                    {/* Dimensions */}
+                    {/* Stock */}
                     <div>
-                      <h4 className="text-sm font-medium text-neutral-900 mb-2">DIMENSIONS</h4>
-                      {/* <p className="text-neutral-600">{product.dimensions}</p> */}
+                      <h4 className="text-sm font-medium text-neutral-900 mb-2">STOCK</h4>
+                      <p className="text-neutral-600">{product.countInStock} available</p>
                     </div>
 
                     {/* Material Swatches */}
-                    <div>
-                      <h4 className="text-sm font-medium text-neutral-900 mb-3">FINISH</h4>
-                      <div className="flex gap-3">
-                        {product.swatches.map((swatch, index) => (
-                          <button
-                            key={index}
-                            className={`w-8 h-8 rounded-full border-2 transition-all duration-200 relative group ${
-                              selectedSwatch === index
-                                ? "border-neutral-900 scale-110"
-                                : "border-neutral-300"
-                            }`}
-                            style={{ backgroundColor: swatch.color }}
-                            onClick={() => setSelectedSwatch(index)}>
-                            <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-neutral-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-                              {swatch.name}
-                            </div>
-                          </button>
-                        ))}
+                    {swatches.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-neutral-900 mb-3">COLORS</h4>
+                        <div className="flex gap-3">
+                          {swatches.map((swatch, index) => (
+                            <button
+                              key={index}
+                              className={`w-8 h-8 rounded-full border-2 transition-all duration-200 relative group ${
+                                selectedSwatch === index
+                                  ? "border-neutral-900 scale-110"
+                                  : "border-neutral-300"
+                              }`}
+                              style={{ backgroundColor: swatch.color }}
+                              onClick={() => setSelectedSwatch(index)}>
+                              <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-neutral-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                                {swatch.name}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Features */}
-                    <div>
-                      <h4 className="text-sm font-medium text-neutral-900 mb-3">FEATURES</h4>
-                      <ul className="space-y-2 text-sm text-neutral-600">
-                        <li>• Sustainably sourced materials</li>
-                        <li>• Hand-finished edges</li>
-                        <li>• Made to order in Belgium</li>
-                        <li>• Lifetime repair program</li>
-                      </ul>
-                    </div>
+                    )}
                   </div>
 
                   {/* Add to Cart */}

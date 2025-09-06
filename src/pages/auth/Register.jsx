@@ -30,18 +30,17 @@ function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [registerUser, { isLoading, refetch }] = useRegisterUserMutation();
+  const [registerUser, { isLoading }] = useRegisterUserMutation();
 
   const handleRegister = async (e) => {
     e.preventDefault();
 
     const result = registerUserSchema.safeParse({ name, email, phone, password });
-    console.log(result);
     if (!result.success) {
       return toast.error(result.error.issues[0].message);
     }
     try {
-      const res = await registerUser({ name, email, phone, password }).unwrap();
+      const res = await registerUser({ name, email, phone, password, confirmPassword }).unwrap();
       dispatch(setUserInfo({ ...res }));
       navigate("/");
     } catch (error) {
@@ -77,19 +76,23 @@ function Register() {
                   className=" w-full shadow border rounded-md h-full bg-gray-100 bg-opacity-50 py-3 px-4  outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
                 />
               </div>
-              <div className=" h-[40px] shadow border  bg-opacity-50 w-[300px] rounded-md   bg-gray-100  placeholder:text-grey-40  flex items-center mb-4">
-                <div className="py-3 px-2  ">965</div>
-                <input
-                  type="number"
-                  name="phone"
-                  placeholder="phone"
-                  value={phone}
-                  onChange={handleChange}
-                  maxLength={8}
-                  className=" w-full  border-l  h-full py-3 px-2 bg-gray-100 bg-opacity-50   outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
-                />
+              <div className=" h-[40px]  border  bg-opacity-50 w-[300px] rounded-md   bg-gray-100  placeholder:text-grey-40  flex items-center mb-4">
+                <div className="relative w-[300px]">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
+                    965
+                  </span>
+                  <input
+                    type="number"
+                    name="phone"
+                    placeholder="phone"
+                    value={phone}
+                    onChange={handleChange}
+                    maxLength={8}
+                    className="w-full h-[40px] shadow border rounded-md bg-gray-100 bg-opacity-50 pl-12 outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
+                  />
+                </div>
               </div>
-              <div className="rounded-md border relative  h-[40px]  w-[300px]   bg-gray-100  placeholder:text-grey-40  flex items-center mb-2">
+              <div className="rounded-md border relative  h-[40px]  w-[300px]   bg-gray-100  placeholder:text-grey-40  flex items-center mb-4">
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="password"
