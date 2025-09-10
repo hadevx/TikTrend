@@ -99,103 +99,162 @@ function Cart() {
               </div>
             </>
           ) : (
-            <table className="min-w-full overflow-x-scroll">
-              <thead>
-                <tr>
-                  <th className="px-2 lg:px-4 py-2 border-b border-gray-300 text-left text-sm font-extrabold text-gray-600">
-                    Product
-                  </th>
+            <div className="overflow-x-auto">
+              {/* Desktop / Tablet View */}
+              <table className="hidden min-w-full md:table">
+                <thead>
+                  <tr>
+                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
+                      Product
+                    </th>
+                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
+                      Color/Size
+                    </th>
+                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
+                      Price
+                    </th>
+                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
+                      Quantity
+                    </th>
+                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
+                      Total
+                    </th>
+                    <th className="px-2 lg:px-4 py-2 border-b"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cartItems.map((item, idx) => {
+                    const stock = item.stock ?? 0;
+                    return (
+                      <tr
+                        key={`${item._id}-${item.variantId ?? "null"}-${
+                          item.variantSize ?? "null"
+                        }-${idx}`}
+                        className="hover:bg-zinc-100/40">
+                        {/* Product Image */}
+                        <td className="px-0 lg:px-4 py-10 border-b">
+                          <Link to={`/products/${item._id}`} className="flex items-center gap-2">
+                            <img
+                              src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
+                              alt={item.name}
+                              className="w-16 h-16 lg:w-24 lg:h-24 bg-zinc-100/50 border-2 object-cover rounded-xl"
+                            />
+                            <p className="truncate max-w-[100px] md:max-w-[200px]">{item.name}</p>
+                          </Link>
+                        </td>
 
-                  <th className="px-2 lg:px-4 py-2 border-b border-gray-300 text-left text-sm font-extrabold text-gray-600">
-                    Variant
-                  </th>
-                  <th className="px-2 lg:px-4 py-2 border-b border-gray-300 text-left text-sm font-extrabold text-gray-600">
-                    Price
-                  </th>
-                  <th className="px-2 lg:px-4 py-2 border-b border-gray-300 text-left text-sm font-extrabold text-gray-600">
-                    Quantity
-                  </th>
-                  <th className="px-2 lg:px-4 py-2 border-b border-gray-300 text-left text-sm font-extrabold text-gray-600">
-                    Total
-                  </th>
-                  <th className="px-2 lg:px-4 py-2 lg:border-b lg:border-gray-300"></th>
-                </tr>
-              </thead>
-              <tbody>
+                        <td className="px-2 lg:px-4 py-2 border-b text-sm">
+                          {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
+                        </td>
+
+                        <td className="lg:px-4 py-2 border-b text-sm">
+                          {item.hasDiscount ? (
+                            <span>{item.discountedPrice.toFixed(3)} KD</span>
+                          ) : (
+                            <span>{item.price.toFixed(3)} KD</span>
+                          )}
+                        </td>
+
+                        <td className="lg:px-4 py-2 border-b">
+                          <select
+                            value={item.qty}
+                            onChange={(e) => handleChange(e, item)}
+                            disabled={stock === 0}
+                            className="border bg-zinc-100/50 lg:w-[100px] p-2 rounded focus:border-blue-500">
+                            {[...Array(stock).keys()].map((x) => (
+                              <option key={x + 1} value={x + 1}>
+                                {x + 1}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+
+                        <td className="py-2 border-b text-sm">
+                          {item.hasDiscount
+                            ? (item.discountedPrice * item.qty).toFixed(3)
+                            : (item.price * item.qty).toFixed(3)}{" "}
+                          KD
+                        </td>
+
+                        <td className="lg:px-4 py-2 border-b">
+                          <button
+                            onClick={() => handleRemove(item)}
+                            className="text-black hover:bg-red-100 p-2 transition-all duration-300  hover:text-red-500 rounded-lg">
+                            <Trash2 strokeWidth={2} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Mobile View */}
+              <div className="md:hidden space-y-2">
                 {cartItems.map((item, idx) => {
-                  const stock = item.stock ?? 0; // Always use stock if available
+                  const stock = item.stock ?? 0;
                   return (
-                    <tr
+                    <div
                       key={`${item._id}-${item.variantId ?? "null"}-${
                         item.variantSize ?? "null"
                       }-${idx}`}
-                      className="hover:bg-zinc-100/40">
-                      {/* Product Image */}
-                      <td className="px-0 lg:px-4 py-10 border-b border-gray-300 ">
-                        <Link to={`/products/${item._id}`} className="flex items-center gap-2">
-                          <img
-                            src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
-                            alt={item.name}
-                            className="w-16 h-16 lg:w-24 lg:h-24 bg-zinc-100/50 border-2 object-cover rounded-xl"
-                          />
-                          <p className="truncate max-w-[100px] md:max-w-[200px]"> {item.name}</p>
-                        </Link>
-                      </td>
+                      className="border p-3 rounded-xl bg-white shadow-sm flex gap-3">
+                      <img
+                        src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
+                        alt={item.name}
+                        className="w-28 h-28 object-cover rounded-lg border bg-zinc-100"
+                      />
 
-                      <td className="px-2 lg:px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
-                        {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
-                      </td>
+                      <div className="flex-1 space-y-1 text-sm">
+                        <p className="font-semibold truncate">{item.name}</p>
+                        <p className="text-gray-600">
+                          Color/Size: {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
+                        </p>
+                        <p className="text-gray-600">
+                          Price:{" "}
+                          {item.hasDiscount
+                            ? item.discountedPrice.toFixed(3)
+                            : item.price.toFixed(3)}{" "}
+                          KD
+                        </p>
 
-                      {item.hasDiscount ? (
-                        <td className=" lg:px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
-                          {item.discountedPrice.toFixed(3)} KD
-                        </td>
-                      ) : (
-                        <td className=" lg:px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
-                          {item.price.toFixed(3)} KD
-                        </td>
-                      )}
+                        <div className="flex items-center justify-between mt-2">
+                          <select
+                            value={item.qty}
+                            onChange={(e) => handleChange(e, item)}
+                            disabled={stock === 0}
+                            className="border bg-zinc-100/50 p-1 rounded focus:border-blue-500">
+                            {[...Array(stock).keys()].map((x) => (
+                              <option key={x + 1} value={x + 1}>
+                                {x + 1}
+                              </option>
+                            ))}
+                          </select>
 
-                      <td className="lg:px-4 py-2 border-b border-gray-300">
-                        <select
-                          value={item.qty}
-                          onChange={(e) => handleChange(e, item)}
-                          disabled={stock === 0}
-                          className="border bg-zinc-100/50 lg:w-[100px] p-2 rounded focus:border-blue-500">
-                          {[...Array(stock).keys()].map((x) => (
-                            <option key={x + 1} value={x + 1}>
-                              {x + 1}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      {item.hasDiscount ? (
-                        <td className=" py-2 border-b border-gray-300 text-sm text-gray-800">
-                          {(item.discountedPrice * item.qty).toFixed(3)} KD
-                        </td>
-                      ) : (
-                        <td className=" py-2 border-b border-gray-300 text-sm text-gray-800">
-                          {(item.price * item.qty).toFixed(3)} KD
-                        </td>
-                      )}
+                          <p className="font-bold">
+                            {item.hasDiscount
+                              ? (item.discountedPrice * item.qty).toFixed(3)
+                              : (item.price * item.qty).toFixed(3)}{" "}
+                            KD
+                          </p>
 
-                      <td className="lg:px-4 py-2 lg:border-b lg:border-gray-300">
-                        <button
-                          onClick={() => handleRemove(item)}
-                          className="text-black transition-all duration-300 hover:bg-zinc-200 hover:text-red-500  rounded-lg">
-                          <Trash2 strokeWidth={2} />
-                        </button>
-                      </td>
-                    </tr>
+                          <button
+                            onClick={() => handleRemove(item)}
+                            className="text-black p-2 transition-all duration-300 hover:bg-red-100 hover:border-red-200 hover:text-red-500 rounded-lg">
+                            <Trash2 strokeWidth={2} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </div>
           )}
         </div>
 
         {/* Cart Summary */}
-        <div className="rounded-3xl lg:w-[600px] px-2 lg:px-20">
+        <div className=" lg:w-[600px]  lg:px-20">
           <h1 className="font-bold text-3xl mb-5">Summary</h1>
           <div className="w-full border border-gray-500/20 mb-5"></div>
 
