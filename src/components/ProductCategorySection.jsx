@@ -65,6 +65,7 @@ export default function ProductCategorySection() {
                 <img
                   src={category.image}
                   alt={category.label}
+                  loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
 

@@ -46,6 +46,7 @@ export default function ProductCard({ product, onQuickLook }) {
             <img
               src={product.image[0]?.url || "/placeholder.svg"}
               alt={product.name}
+              loading="lazy"
               className="object-cover w-full h-full"
             />
           </motion.div>

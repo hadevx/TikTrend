@@ -66,6 +66,7 @@ function Product({ product }) {
         <img
           src={selectedVariant?.images?.[0]?.url || product?.image?.[0]?.url || "/placeholder.svg"}
           alt={product.name}
+          loading="lazy"
           className="w-full h-60 sm:h-64 md:h-56 lg:h-60 object-cover group-hover:scale-105 transition-transform duration-300"
         />
       </Link>
