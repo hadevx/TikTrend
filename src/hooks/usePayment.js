@@ -160,6 +160,20 @@ export function usePayment(cartItems, userAddress, paymentMethod, deliveryStatus
   }, []);
 
   const amountInUSD = (totalAmount * exchangeRate).toFixed(2);
+  // ✅ PayPal create order function
+  const createPayPalOrder = (userInfo, amountInUSD) => async (data, actions) => {
+    return actions.order.create({
+      purchase_units: [
+        {
+          description: `Order for ${userInfo?.name || "Customer"}`,
+          amount: {
+            currency_code: "USD",
+            value: amountInUSD,
+          },
+        },
+      ],
+    });
+  };
 
   return {
     totalAmount,
@@ -167,5 +181,6 @@ export function usePayment(cartItems, userAddress, paymentMethod, deliveryStatus
     loadingCreateOrder,
     handleCashPayment,
     handlePayPalApprove,
+    createPayPalOrder,
   };
 }
