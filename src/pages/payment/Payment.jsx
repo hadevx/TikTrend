@@ -34,7 +34,21 @@ function Payment() {
     createPayPalOrder,
   } = usePayment(cartItems, userAddress, paymentMethod, deliveryStatus);
 
-  console.log(cartItems);
+  const subTotal = () => {
+    return cartItems.reduce(
+      (acc, item) => acc + (item.hasDiscount ? item.discountedPrice : item.price) * item.qty,
+      0
+    );
+  };
+  const totalCost = () => {
+    const itemsTotal = cartItems.reduce((acc, item) => {
+      const itemPrice = item.hasDiscount ? item.discountedPrice : item.price; // Use discountedPrice only if hasDiscount is true
+      return acc + itemPrice * item.qty;
+    }, 0);
+
+    const deliveryFee = Number(deliveryStatus?.[0]?.shippingFee ?? 0);
+    return itemsTotal + deliveryFee;
+  };
   return (
     <Layout>
       <div className="min-h-screen lg:mt-[100px]">
@@ -158,12 +172,10 @@ function Payment() {
                 <h1 className="text-gray-700">Total:</h1>
               </div>
               <div className="flex flex-col gap-2 mb-5">
-                <h1 className="font-bold">
-                  {cartItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(3)} KD
-                </h1>
+                <h1 className="font-bold">{subTotal().toFixed(3)} KD</h1>
                 <h1 className="font-bold">{deliveryStatus?.[0].shippingFee.toFixed(3)} KD</h1>
                 <hr />
-                <h1 className="font-bold">{totalAmount.toFixed(3)} KD</h1>
+                <h1 className="font-bold">{totalCost().toFixed(3)} KD</h1>
               </div>
             </div>
             {cartItems.map((item) => (

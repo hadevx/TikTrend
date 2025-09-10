@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import clsx from "clsx";
 import { useGetProductByIdQuery } from "../../redux/queries/productApi";
 import Loader from "../../components/Loader";
+import { Check } from "lucide-react";
 
 function Product() {
   const dispatch = useDispatch();
@@ -14,6 +15,7 @@ function Product() {
   const { data: product, isLoading, refetch } = useGetProductByIdQuery(productId);
 
   const cartItems = useSelector((state) => state.cart.cartItems);
+
   const [counter, setCounter] = useState(1);
   const [activeImage, setActiveImage] = useState(null);
   const [activeVariant, setActiveVariant] = useState(null);
@@ -112,7 +114,7 @@ function Product() {
                       "w-20 h-20 object-cover rounded-md cursor-pointer transition-all duration-200",
                       img.url === activeImage
                         ? "border-2 border-blue-500 opacity-70 shadow-md"
-                        : "border-gray-300 hover:opacity-80"
+                        : "border border-gray-300 hover:opacity-80"
                     )}
                     onClick={() => setActiveImage(img.url)}
                   />
@@ -122,13 +124,7 @@ function Product() {
           </div>
 
           {/* Right: Product Info */}
-          <div className="relative flex flex-col rounded-2xl p-8 lg:p-12 w-full sm:w-1/2 md:w-1/2">
-            {/*  {product.hasDiscount && (
-              <span className="absolute top-1 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
-                -{(product.discountBy * 100).toFixed(0)}%
-              </span>
-            )} */}
-
+          <div className="relative flex flex-col rounded-2xl p-8 lg:p-12 w-full sm:w-1/2 md:w-1/2 bg-white ">
             <h1 className="text-3xl font-extrabold mb-4">{product?.name}</h1>
             <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
 
@@ -137,14 +133,11 @@ function Product() {
               <div className="mb-4">
                 <span className="font-semibold block mb-2">Color:</span>
                 <div className="flex gap-3 flex-wrap">
-                  {product.variants.map((variant) => (
+                  {product?.variants?.map((variant) => (
                     <button
                       key={variant._id}
                       className={clsx(
-                        "w-8 h-8 rounded-full border-2 transition-transform",
-                        activeVariant?._id === variant._id
-                          ? "border-blue-500 scale-110"
-                          : "border-gray-300 hover:scale-105"
+                        "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-transform"
                       )}
                       style={{ backgroundColor: variant?.color?.toLowerCase() }}
                       onClick={() => {
@@ -152,8 +145,11 @@ function Product() {
                         setActiveImage(variant.images?.[0]?.url || product.image?.[0]?.url);
                         setSelectedSize(variant.sizes?.[0] || null);
                         setCounter(1);
-                      }}
-                    />
+                      }}>
+                      {activeVariant?._id === variant._id && (
+                        <Check className="w-6 h-6 text-white drop-shadow" />
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -168,10 +164,8 @@ function Product() {
                     <span
                       key={s.size}
                       className={clsx(
-                        "px-3 py-1 border rounded-full cursor-pointer hover:scale-105",
-                        selectedSize?.size === s.size
-                          ? "bg-blue-500 text-white border-blue-500"
-                          : ""
+                        "w-10 h-10 border-2 flex items-center justify-center rounded-full cursor-pointer transition-all",
+                        selectedSize?.size === s.size ? "bg-black text-white" : "hover:bg-gray-100"
                       )}
                       onClick={() => {
                         setSelectedSize(s);
@@ -207,7 +201,7 @@ function Product() {
                 className={clsx(
                   "px-4 py-2 border rounded-md font-bold text-2xl transition-all",
                   counter === 1
-                    ? "border-gray-400 text-gray-400 cursor-not-allowed"
+                    ? "border-gray-300 text-gray-400 cursor-not-allowed"
                     : "bg-black text-white hover:bg-gray-800"
                 )}>
                 -
@@ -218,7 +212,7 @@ function Product() {
                 className={clsx(
                   "px-4 py-2 border rounded-md font-bold text-2xl transition-all",
                   counter >= stock
-                    ? "border-gray-400 text-gray-400 cursor-not-allowed"
+                    ? "border-gray-300 text-gray-400 cursor-not-allowed"
                     : "bg-black text-white hover:bg-gray-800"
                 )}>
                 +
@@ -230,7 +224,7 @@ function Product() {
               className={clsx(
                 "px-6 py-4 rounded-xl font-bold uppercase transition-all shadow-md",
                 stock === 0
-                  ? "bg-gray-300 cursor-not-allowed"
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-gradient-to-r from-black to-gray-800 text-white hover:from-gray-800 hover:to-black"
               )}
               onClick={handleAddToCart}

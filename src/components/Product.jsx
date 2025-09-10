@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../redux/slices/cartSlice";
 import { toast } from "react-toastify";
 import clsx from "clsx";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Check } from "lucide-react";
 import { useState } from "react";
 
 function Product({ product }) {
@@ -19,8 +19,8 @@ function Product({ product }) {
 
   // Stock handling
   const stock = selectedVariant
-    ? selectedVariant.sizes?.find((s) => s.size === selectedSize)?.stock || 0
-    : product?.countInStock || 0;
+    ? selectedVariant.sizes?.find((s) => s.size === selectedSize)?.stock
+    : product?.countInStock;
 
   const handleAddToCart = () => {
     if (selectedVariant && !selectedSize) {
@@ -73,7 +73,21 @@ function Product({ product }) {
       <div className="p-4 flex flex-col justify-between h-full">
         <div>
           <p className="text-gray-500 text-sm mb-1 truncate">{product?.category?.name}</p>
-          <h2 className="text-gray-900 font-semibold text-lg truncate">{product?.name}</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-gray-900 font-semibold text-lg truncate ">{product?.name}</h2>
+            <div className="text-sm sm:text-base">
+              {product.hasDiscount ? (
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-gray-400 line-through text-sm">
+                    {oldPrice.toFixed(3)} KD
+                  </span>
+                  <span className="text-green-600 font-bold">{newPrice.toFixed(3)} KD</span>
+                </div>
+              ) : (
+                <span className="text-black font-bold">{oldPrice.toFixed(3)} KD</span>
+              )}
+            </div>
+          </div>
 
           {/* Variant Colors */}
           <div className="mt-2 flex gap-1">
@@ -81,15 +95,17 @@ function Product({ product }) {
               <button
                 key={variant._id}
                 className={clsx(
-                  "w-6 h-6 rounded-full border-2 transition-all",
-                  selectedVariant?._id === variant._id ? "border-0 scale-110" : "border-gray-300"
+                  "relative w-6 h-6  rounded-full  flex items-center justify-center transition-all"
                 )}
                 style={{ backgroundColor: variant?.color?.toLowerCase() }}
                 onClick={() => {
                   setSelectedVariant(variant);
                   setSelectedSize(variant.sizes?.[0]?.size || "");
-                }}
-              />
+                }}>
+                {selectedVariant?._id === variant._id && (
+                  <Check className="w-4 h-4 text-white drop-shadow" />
+                )}
+              </button>
             ))}
           </div>
 
@@ -102,7 +118,7 @@ function Product({ product }) {
                   disabled={s.stock === 0}
                   onClick={() => setSelectedSize(s.size)}
                   className={clsx(
-                    "w-8 h-8 border-2 rounded-full text-sm font-medium flex items-center justify-center transition-colors",
+                    "w-6 h-6 border-2 rounded-full text-sm font-medium flex items-center justify-center transition-colors",
                     selectedSize === s.size
                       ? "bg-black text-white border-black"
                       : "bg-white text-gray-700 border-gray-300",
@@ -115,32 +131,18 @@ function Product({ product }) {
           )}
         </div>
 
-        {/* Price + Add to Cart */}
-        <div className="mt-3 flex items-center justify-between">
-          <div className="text-sm sm:text-base">
-            {product.hasDiscount ? (
-              <div className="flex flex-col">
-                <span className="text-gray-400 line-through text-sm">{oldPrice.toFixed(3)} KD</span>
-                <span className="text-green-600 font-bold">{newPrice.toFixed(3)} KD</span>
-              </div>
-            ) : (
-              <span className="text-black font-bold">{oldPrice.toFixed(3)} KD</span>
-            )}
-          </div>
-
+        <div className="mt-3">
           <button
             onClick={handleAddToCart}
-            disabled={!selectedSize || stock === 0}
+            disabled={stock === 0}
             className={clsx(
-              "ml-2 px-3 py-2 rounded-lg font-semibold text-white text-xs lg:text-sm transition-colors duration-300",
-              !selectedSize || stock === 0
+              "w-full px-3 py-3 rounded-lg font-semibold text-white text-sm lg:text-base transition-colors duration-300 flex items-center justify-center gap-2",
+              stock === 0
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-gradient-to-t from-zinc-900 to-zinc-700 hover:from-zinc-800 hover:to-zinc-600"
             )}>
-            <span className="flex items-center gap-1">
-              <ShoppingCart className="w-4 h-4" />
-              <span className="hidden md:inline">Add to Cart</span>
-            </span>
+            <ShoppingCart className="w-5 h-5" />
+            <span>Add to Cart</span>
           </button>
         </div>
       </div>

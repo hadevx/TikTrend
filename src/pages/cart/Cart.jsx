@@ -67,8 +67,19 @@ function Cart() {
     navigate("/payment");
   };
 
+  const subTotal = () => {
+    return cartItems.reduce(
+      (acc, item) => acc + (item.hasDiscount ? item.discountedPrice : item.price) * item.qty,
+      0
+    );
+  };
+
   const totalCost = () => {
-    const itemsTotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const itemsTotal = cartItems.reduce((acc, item) => {
+      const itemPrice = item.hasDiscount ? item.discountedPrice : item.price; // Use discountedPrice only if hasDiscount is true
+      return acc + itemPrice * item.qty;
+    }, 0);
+
     const deliveryFee = Number(deliveryStatus?.[0]?.shippingFee ?? 0);
     return itemsTotal + deliveryFee;
   };
@@ -135,9 +146,15 @@ function Cart() {
                         {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
                       </td>
 
-                      <td className=" lg:px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
-                        {item.price.toFixed(3)} KD
-                      </td>
+                      {item.hasDiscount ? (
+                        <td className=" lg:px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
+                          {item.discountedPrice.toFixed(3)} KD
+                        </td>
+                      ) : (
+                        <td className=" lg:px-4 py-2 border-b border-gray-300 text-sm text-gray-800">
+                          {item.price.toFixed(3)} KD
+                        </td>
+                      )}
 
                       <td className="lg:px-4 py-2 border-b border-gray-300">
                         <select
@@ -152,10 +169,15 @@ function Cart() {
                           ))}
                         </select>
                       </td>
-
-                      <td className=" py-2 border-b border-gray-300 text-sm text-gray-800">
-                        {(item.price * item.qty).toFixed(3)} KD
-                      </td>
+                      {item.hasDiscount ? (
+                        <td className=" py-2 border-b border-gray-300 text-sm text-gray-800">
+                          {(item.discountedPrice * item.qty).toFixed(3)} KD
+                        </td>
+                      ) : (
+                        <td className=" py-2 border-b border-gray-300 text-sm text-gray-800">
+                          {(item.price * item.qty).toFixed(3)} KD
+                        </td>
+                      )}
 
                       <td className="lg:px-4 py-2 lg:border-b lg:border-gray-300">
                         <button
@@ -180,7 +202,7 @@ function Cart() {
           <div className="flex flex-col gap-5">
             <div className="flex justify-between">
               <p>Subtotal:</p>
-              <p>{cartItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(3)} KD</p>
+              <p>{subTotal().toFixed(3)} KD</p>
             </div>
 
             <div className="flex justify-between">
