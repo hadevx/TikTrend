@@ -147,7 +147,7 @@ function Profile() {
             <h1 className="text-3xl font-bold ">My profile</h1>
             <motion.div
               variants={childVariants}
-              className="flex items-center justify-between border bg-zinc-200/10 p-5 lg:p-7 drop-shadow-lg shadow rounded-lg">
+              className="flex items-center justify-between border shadow bg-zinc-50 p-5 lg:p-7  rounded-lg">
               <div className="flex items-center gap-2 lg:gap-5">
                 <div className=" rounded-[50%] hover:from-rose-500/80 hover:to-rose-600 bg-gradient-to-r shadow-lg drop-shadow-lg font-bold text-md lg:text-3xl from-gray-500 to-gray-700 text-white size-[40px] lg:size-[100px] flex justify-center items-center">
                   {userInfo?.name?.charAt(0).toUpperCase()}
@@ -168,13 +168,13 @@ function Profile() {
                     "bg-gradient-to-t text-xs  lg:text-base items-center flex justify-center hover:bg-gradient-to-b transition-all duration-300  p-3 rounded-lg text-white font-bold drop-shadow-md ",
                     isLoading ? "from-gray-500 to-gray-400" : "from-rose-500 to-rose-400"
                   )}>
-                  {isLoading ? <Spinner className="border-t-rose-500" /> : "Log out"}
+                  {isLoading ? <Spinner className="border-t-transparent" /> : "Log out"}
                 </button>
               </div>
             </motion.div>
             <motion.div
               variants={childVariants}
-              className="flex flex-col gap-5 border bg-zinc-200/10 p-5 lg:p-7 drop-shadow-lg shadow rounded-lg">
+              className="flex flex-col gap-5 border shadow bg-zinc-50 p-5 lg:p-7  rounded-lg">
               <h1 className="font-extrabold text-xl mb-3">Personal Information</h1>
               <div className="flex  justify-between">
                 <div className="">
@@ -239,7 +239,7 @@ function Profile() {
             {userAddress ? (
               <motion.div
                 variants={childVariants}
-                className="flex flex-col gap-5 border bg-zinc-200/10 p-5 lg:p-7 drop-shadow-lg shadow rounded-lg">
+                className="flex flex-col gap-5 border bg-zinc-50 p-5 lg:p-7  shadow rounded-lg">
                 <h1 className="font-extrabold text-xl mb-3 items-center flex gap-2">
                   Address{" "}
                   <Tooltip
@@ -340,7 +340,7 @@ function Profile() {
               <>
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="flex hover:bg-zinc-200/5 cursor-pointer items-center gap-5 border bg-zinc-200/10 p-7 drop-shadow-lg shadow rounded-lg">
+                  className="flex  cursor-pointer items-center gap-5 border bg-zinc-50 p-7 shadow rounded-lg">
                   <h1 className="font-extrabold text-xl ">Add your Address</h1>
                   <HousePlus />
                 </button>

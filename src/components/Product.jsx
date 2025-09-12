@@ -22,6 +22,7 @@ function Product({ product }) {
     ? selectedVariant.sizes?.find((s) => s.size === selectedSize)?.stock
     : product?.countInStock;
 
+  console.log(stock);
   const handleAddToCart = () => {
     if (selectedVariant && !selectedSize) {
       return toast.error("Please select a size", { position: "top-center" });
@@ -55,9 +56,12 @@ function Product({ product }) {
       })
     );
 
-    toast.success(`${product.name} (${selectedVariant?.color}, ${selectedSize}) added to cart`, {
-      position: "top-center",
-    });
+    toast.success(
+      `${product.name}${
+        selectedVariant && selectedSize ? ` (${selectedVariant.color}, ${selectedSize})` : ""
+      } added to cart`,
+      { position: "top-center" }
+    );
   };
 
   return (
@@ -69,6 +73,17 @@ function Product({ product }) {
           loading="lazy"
           className="w-full h-60 sm:h-64 md:h-56 lg:h-60 object-cover group-hover:scale-105 transition-transform duration-300"
         />
+
+        {stock < 5 && (
+          <span className="absolute top-2 left-2 bg-orange-100 border-orange-500 border text-orange-500 text-xs font-semibold px-2 py-1 rounded-full ">
+            Low stock
+          </span>
+        )}
+        {product.hasDiscount && (
+          <span className="absolute top-2 left-24 bg-blue-500   text-white text-xs font-semibold px-2 py-1 rounded-full ">
+            {product.discountBy * 100}% off
+          </span>
+        )}
       </Link>
 
       <div className="p-4 flex flex-col justify-between h-full">

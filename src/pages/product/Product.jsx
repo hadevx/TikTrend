@@ -90,7 +90,7 @@ function Product() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="container mt-[100px] px-4 mx-auto flex flex-col sm:flex-row gap-10 min-h-screen">
+        <div className="container mt-[100px] justify-end px-4 mx-auto flex flex-col sm:flex-row gap-10 min-h-screen">
           {/* Left: Product Image */}
           <div className="w-full sm:w-2/3 md:w-1/2 lg:w-[500px] flex flex-col items-center">
             <div className="w-full h-[500px] overflow-hidden rounded-xl shadow-lg">
@@ -124,10 +124,14 @@ function Product() {
           </div>
 
           {/* Right: Product Info */}
-          <div className="relative flex flex-col rounded-2xl p-8 lg:p-12 w-full sm:w-1/2 md:w-1/2 bg-white ">
+          <div className="relative  flex flex-col rounded-2xl p-8 lg:p-12 w-full sm:w-1/2 md:w-1/2  ">
             <h1 className="text-3xl font-extrabold mb-4">{product?.name}</h1>
             <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
-
+            {stock < 5 && (
+              <p className="absolute top-0 px-2 py-1 text-orange-500 bg-orange-50 border border-orange-500 rounded-full">
+                Only {stock} left in stock
+              </p>
+            )}
             {/* Color selection */}
             {product?.variants?.length > 0 && (
               <div className="mb-4">

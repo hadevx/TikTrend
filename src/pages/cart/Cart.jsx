@@ -89,7 +89,7 @@ function Cart() {
       <div className="px-4 lg:px-52 mt-[100px] lg:mt-32 min-h-screen flex gap-5 lg:gap-10 flex-col lg:flex-row lg:justify-between">
         {/* Cart Table */}
         <div className="w-full lg:w-[1000px]">
-          <h1 className="font-bold text-3xl mb-5">Cart</h1>
+          <h1 className="font-bold lg:text-3xl mb-5">Cart</h1>
 
           {cartItems?.length === 0 ? (
             <>
@@ -255,10 +255,10 @@ function Cart() {
 
         {/* Cart Summary */}
         <div className=" lg:w-[600px]  lg:px-20">
-          <h1 className="font-bold text-3xl mb-5">Summary</h1>
+          <h1 className="font-bold lg:text-3xl mb-5">Summary</h1>
           <div className="w-full border border-gray-500/20 mb-5"></div>
 
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2 lg:gap-5">
             <div className="flex justify-between">
               <p>Subtotal:</p>
               <p>{subTotal().toFixed(3)} KD</p>
@@ -276,7 +276,7 @@ function Cart() {
               <p className="uppercase">{deliveryStatus?.[0].timeToDeliver}</p>
             </div>
 
-            <div className="w-full border border-gray-500/20 mb-5"></div>
+            <div className="w-full border border-gray-500/20 mb-2"></div>
 
             <div className="flex justify-between">
               <p>Total:</p>
@@ -284,7 +284,7 @@ function Cart() {
             </div>
 
             {cartItems.length > 0 && totalCost() < deliveryStatus?.[0].minDeliveryCost && (
-              <div className="p-3 bg-rose-50 rounded-lg text-rose-500 font-bold">
+              <div className="p-3 bg-rose-50 rounded-lg text-rose-500 border border-rose-500 font-bold">
                 Minimum order: {deliveryStatus?.[0].minDeliveryCost.toFixed(3)} KD
               </div>
             )}
@@ -293,7 +293,7 @@ function Cart() {
               onClick={handleGoToPayment}
               disabled={cartItems.length === 0 || totalCost() < deliveryStatus?.[0].minDeliveryCost}
               className={clsx(
-                "bg-gradient-to-t mt-5 mb-10 text-white p-3 rounded-lg w-full font-bold",
+                " bg-gradient-to-t mt-5 mb-10 text-white p-3 rounded-lg w-full font-bold",
                 cartItems.length === 0 || totalCost() < deliveryStatus?.[0].minDeliveryCost
                   ? "from-zinc-300 to-zinc-200 border"
                   : "from-zinc-900 to-zinc-700 hover:bg-gradient-to-b"
