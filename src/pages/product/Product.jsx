@@ -226,7 +226,7 @@ function Product() {
             {/* Add to Cart */}
             <button
               className={clsx(
-                "px-6 py-4 rounded-xl font-bold uppercase transition-all shadow-md",
+                "px-6 py-4  rounded-xl font-bold uppercase transition-all shadow-md",
                 stock === 0
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-gradient-to-r from-black to-gray-800 text-white hover:from-gray-800 hover:to-black"

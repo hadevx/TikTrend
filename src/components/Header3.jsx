@@ -120,8 +120,8 @@ export default function Header({ onSearch }) {
           pathname === "/"
             ? isScrolled
               ? "bg-white/[0.02] text-black backdrop-blur-md"
-              : "bg-white/[0.02] text-white"
-            : ""
+              : "bg-white/[0.02] text-white "
+            : "backdrop-blur-md"
         )}
         initial={{ y: -100 }}
         animate={{ y: 0 }}

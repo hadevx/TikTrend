@@ -90,7 +90,9 @@ function Product({ product }) {
         <div>
           <p className="text-gray-500 text-sm mb-1 truncate">{product?.category?.name}</p>
           <div className="flex items-center justify-between">
-            <h2 className="text-gray-900 font-semibold text-lg truncate ">{product?.name}</h2>
+            <h2 className="text-gray-900 font-semibold max-w-[100px]  lg:text-lg truncate ">
+              {product?.name}
+            </h2>
             <div className="text-sm sm:text-base">
               {product.hasDiscount ? (
                 <div className="flex flex-col items-center gap-1">
