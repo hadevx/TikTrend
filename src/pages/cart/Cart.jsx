@@ -273,7 +273,7 @@ function Cart() {
 
             <div className="flex justify-between">
               <p>Expected delivery:</p>
-              <p className="uppercase">{deliveryStatus?.[0].timeToDeliver}</p>
+              <p className="uppercase">{deliveryStatus?.[0]?.timeToDeliver}</p>
             </div>
 
             <div className="w-full border border-gray-500/20 mb-2"></div>
@@ -283,18 +283,20 @@ function Cart() {
               <p>{totalCost().toFixed(3)} KD</p>
             </div>
 
-            {cartItems.length > 0 && totalCost() < deliveryStatus?.[0].minDeliveryCost && (
+            {cartItems.length > 0 && totalCost() < deliveryStatus?.[0]?.minDeliveryCost && (
               <div className="p-3 bg-rose-50 rounded-lg text-rose-500 border border-rose-500 font-bold">
-                Minimum order: {deliveryStatus?.[0].minDeliveryCost.toFixed(3)} KD
+                Minimum order: {deliveryStatus?.[0]?.minDeliveryCost?.toFixed(3)} KD
               </div>
             )}
 
             <button
               onClick={handleGoToPayment}
-              disabled={cartItems.length === 0 || totalCost() < deliveryStatus?.[0].minDeliveryCost}
+              disabled={
+                cartItems.length === 0 || totalCost() < deliveryStatus?.[0]?.minDeliveryCost
+              }
               className={clsx(
                 " bg-gradient-to-t mt-5 mb-10 text-white p-3 rounded-lg w-full font-bold",
-                cartItems.length === 0 || totalCost() < deliveryStatus?.[0].minDeliveryCost
+                cartItems.length === 0 || totalCost() < deliveryStatus?.[0]?.minDeliveryCost
                   ? "from-zinc-300 to-zinc-200 border"
                   : "from-zinc-900 to-zinc-700 hover:bg-gradient-to-b"
               )}>
