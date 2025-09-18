@@ -268,7 +268,7 @@ function Cart() {
               <p className="flex gap-2">
                 Delivery: <Truck strokeWidth={1} />
               </p>
-              <p>{deliveryStatus?.[0].shippingFee?.toFixed(3) ?? "Free"} KD</p>
+              <p>{deliveryStatus?.[0]?.shippingFee?.toFixed(3) ?? "Free"} KD</p>
             </div>
 
             <div className="flex justify-between">
