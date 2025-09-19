@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Instagram, Twitter, Facebook, ArrowUpRight } from "lucide-react";
-import webschema from "../assets/images/webschema.png";
+import webschema from "/images/webschema.png";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
