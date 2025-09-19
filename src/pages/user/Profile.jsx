@@ -165,10 +165,12 @@ function Profile() {
                   onClick={handleLogout}
                   disabled={isLoading}
                   className={clsx(
-                    "bg-gradient-to-t text-xs  lg:text-base items-center flex justify-center hover:bg-gradient-to-b transition-all duration-300  p-3 rounded-lg text-white font-bold drop-shadow-md ",
-                    isLoading ? "from-gray-500 to-gray-400" : "from-rose-500 to-rose-400"
+                    "bg-gradient-to-t text-xs  lg:text-base items-center flex justify-center  transition-all duration-300  p-3 rounded-md text-white font-bold ",
+                    isLoading
+                      ? "from-gray-500 to-gray-400"
+                      : "bg-rose-500 shadow-[0_7px_15px_rgba(244,63,94,0.6)] hover:bg-rose-600"
                   )}>
-                  {isLoading ? <Spinner className="border-t-transparent" /> : "Log out"}
+                  {isLoading ? <Spinner className="border-t-transparent" /> : "Log Out"}
                 </button>
               </div>
             </motion.div>

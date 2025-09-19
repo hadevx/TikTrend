@@ -215,7 +215,7 @@ export default function Header({ onSearch }) {
           {/* Mobile toggle */}
           <div className="flex items-center space-x-3 md:hidden">
             {/* User & Cart */}
-            <div className="flex items-center space-x-6 justify-end">
+            <div className="flex items-center space-x-3 justify-end">
               {userInfo ? (
                 <Link to="/profile" className="flex items-center space-x-1 hover:opacity-50">
                   <UserIconSvg className="h-5 w-5" /> {userInfo.name}

@@ -206,7 +206,7 @@ function Cart() {
                       />
 
                       <div className="flex-1 space-y-1 text-sm">
-                        <p className="font-semibold truncate">{item.name}</p>
+                        <p className="font-semibold break-words">{item.name}</p>
                         <p className="text-gray-600">
                           Color/Size: {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
                         </p>
@@ -298,7 +298,7 @@ function Cart() {
                 " bg-gradient-to-t mt-5 mb-10 text-white p-3 rounded-lg w-full font-bold",
                 cartItems.length === 0 || totalCost() < deliveryStatus?.[0]?.minDeliveryCost
                   ? "from-zinc-300 to-zinc-200 border"
-                  : "from-zinc-900 to-zinc-700 hover:bg-gradient-to-b"
+                  : "from-zinc-900 to-zinc-700  shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995]"
               )}>
               Go to payment
             </button>

@@ -90,16 +90,21 @@ function Product() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="container mt-[100px] justify-end px-4 mx-auto flex flex-col sm:flex-row gap-10 min-h-screen">
+        <div className="container mt-[100px] justify-end  mx-auto flex flex-col sm:flex-row gap-10 min-h-screen">
           {/* Left: Product Image */}
           <div className="w-full sm:w-2/3 md:w-1/2 lg:w-[500px] flex flex-col items-center">
-            <div className="w-full h-[500px] overflow-hidden rounded-xl shadow-lg">
+            <div className="relative w-full h-[500px] overflow-hidden lg:rounded-xl shadow-lg">
               <img
                 src={activeImage}
                 loading="lazy"
                 alt={product?.name}
-                className="w-full h-full object-cover rounded-xl transition-transform duration-300 hover:scale-105"
+                className="w-full h-full object-cover lg:rounded-xl transition-transform duration-300 hover:scale-105"
               />
+              {stock < 5 && (
+                <p className="lg:hidden absolute z-50 top-0 px-2 py-1 text-orange-500 bg-orange-50 border border-orange-500 rounded-full">
+                  Only {stock} left in stock
+                </p>
+              )}
             </div>
 
             {/* Thumbnails */}
@@ -124,11 +129,11 @@ function Product() {
           </div>
 
           {/* Right: Product Info */}
-          <div className="relative  flex flex-col rounded-2xl p-8 lg:p-12 w-full sm:w-1/2 md:w-1/2  ">
+          <div className="relative px-3 flex flex-col rounded-2xl   lg:p-12 w-full sm:w-1/2 md:w-1/2  ">
             <h1 className="text-3xl font-extrabold mb-4">{product?.name}</h1>
             <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
             {stock < 5 && (
-              <p className="absolute top-0 px-2 py-1 text-orange-500 bg-orange-50 border border-orange-500 rounded-full">
+              <p className="hidden lg:block absolute top-0 px-2 py-1 text-orange-500 bg-orange-50 border border-orange-500 rounded-full">
                 Only {stock} left in stock
               </p>
             )}
@@ -226,10 +231,10 @@ function Product() {
             {/* Add to Cart */}
             <button
               className={clsx(
-                "px-6 py-4  rounded-xl font-bold uppercase transition-all shadow-md",
+                "px-6 py-4 sticky bottom-2  rounded-xl font-bold uppercase transition-all shadow-md",
                 stock === 0
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gradient-to-r from-black to-gray-800 text-white hover:from-gray-800 hover:to-black"
+                  : "bg-gradient-to-t from-zinc-900 to-zinc-700  shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995] text-white "
               )}
               onClick={handleAddToCart}
               disabled={stock === 0}>

@@ -72,7 +72,9 @@ export default function FeaturedProducts({ products, isLoading }) {
         </motion.div>
       </div>
       <div className="flex justify-center mt-5 items-center">
-        <Link to="/all-products" className="bg-black text-white px-3 py-2 ">
+        <Link
+          to="/all-products"
+          className="bg-gradient-to-t from-zinc-900 to-zinc-700  shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995] rounded-md text-white px-3 py-2 ">
           Show All
         </Link>
       </div>

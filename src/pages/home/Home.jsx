@@ -16,7 +16,7 @@ import FeaturedProducts from "../../components/FeaturedProducts";
 import { CollectionStrip } from "../../components/CollectionStripe";
 import { MaterialsSection } from "../../components/MaterialSection";
 import { HeroSection } from "../../components/HeroSection";
-
+import HeroSection2 from "../../components/HeroSection2";
 function Home() {
   const { data: products, isLoading, refetch } = useGetLatestProductsQuery();
 
@@ -32,8 +32,11 @@ function Home() {
   }, [products, refetch]);
 
   return (
+    // <HeroSection2 />
     <Layout>
+      {/* <HeroSection2 /> */}
       <HeroSection />
+
       <FeaturedProducts products={products} isLoading={isLoading} />
       <CollectionStrip />
       <MaterialsSection />

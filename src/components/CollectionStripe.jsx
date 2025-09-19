@@ -87,7 +87,7 @@ export function CollectionStrip() {
             <motion.div
               onClick={() => navigate(`/category/${collection.id}`)} // Navigate by ID
               key={collection.id}
-              className="flex-shrink-0 w-80 group cursor-pointer"
+              className="flex-shrink-0 w-80 group cursor-pointer   drop-shadow-[0_10px_10px_rgba(0,0,0,0.2)] hover:scale-[0.995]"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3, ease: [0.21, 0.47, 0.32, 0.98] }}>
               <div className="relative aspect-[4/5] rounded-2xl overflow-hidden mb-4">

@@ -140,7 +140,7 @@ function Register() {
                 <button
                   disabled={isLoading}
                   type="submit"
-                  className="w-full mt-4 border rounded-lg font-semibold flex items-center justify-center  px-3 py-2  transition-all delay-50 bg-gradient-to-r from-slate-800 to-slate-600 shadow-md text-white hover:bg-gradient-to-r hover:from-slate-800 hover:to-slate-900">
+                  className="w-full mt-4  rounded-lg font-semibold flex items-center justify-center  px-3 py-2  transition-all delay-50 bg-gradient-to-t from-zinc-900 to-zinc-700  shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995] text-white ">
                   {!isLoading ? "Register" : <Spinner className="border-t-slate-700" />}
                 </button>
               </div>

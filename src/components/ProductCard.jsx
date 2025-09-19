@@ -19,7 +19,7 @@ export default function ProductCard({ product, onQuickLook }) {
   return (
     <Link to={`/products/${product._id}`}>
       <motion.div
-        className="group relative bg-white overflow-hidden cursor-pointer"
+        className="group relative bg-white overflow-hidden cursor-pointer drop-shadow-[0_10px_10px_rgba(0,0,0,0.2)] hover:scale-[0.995]"
         style={{ borderRadius: "24px", boxShadow: "rgba(0, 0, 0, 0.1) 0px 10px 50px" }}
         layout>
         {/* Badges */}

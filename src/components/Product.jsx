@@ -157,7 +157,7 @@ function Product({ product }) {
               "w-full px-3 py-3 rounded-lg font-semibold text-white text-sm lg:text-base transition-colors duration-300 flex items-center justify-center gap-2",
               stock === 0
                 ? "bg-gray-300 cursor-not-allowed"
-                : "bg-gradient-to-t from-zinc-900 to-zinc-700 hover:from-zinc-800 hover:to-zinc-600"
+                : "bg-gradient-to-t from-zinc-900 to-zinc-700  shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995]"
             )}>
             <ShoppingCart className="w-5 h-5" />
             <span>Add to Cart</span>

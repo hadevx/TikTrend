@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Instagram, Twitter, Facebook, ArrowUpRight } from "lucide-react";
 import logo from "../assets/logo.png";
+import webschema from "../assets/images/webschema.png";
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -46,9 +48,9 @@ export default function Footer() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}>
-              <h3 className="text-2xl font-bold text-neutral-900 mb-4">Ecommerce</h3>
+              <h3 className="text-2xl font-bold text-neutral-900 mb-4">WebSchema</h3>
               <p className="text-neutral-600 mb-6 leading-relaxed">
-                Ecommerce platform for creative individuals
+                WebSchema platform for creative individuals
               </p>
               <div className="flex space-x-4">
                 {socialLinks.map((social) => (
@@ -106,19 +108,28 @@ export default function Footer() {
           transition={{ duration: 0.6, delay: 0.3 }}
           viewport={{ once: true }}>
           <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-neutral-500 text-center">
-            <p>&copy; {currentYear} Ecommerce. All rights reserved.</p>
+            <p>&copy; {currentYear} WebSchema. All rights reserved.</p>
             <div className="flex space-x-6">
               <p className="hover:text-neutral-700 transition-colors flex items-center gap-2">
                 Designed by
-                <a href="https://ws-opal-alpha.vercel.app/" target="_blank">
+                {/*    <a href="https://ws-opal-alpha.vercel.app/" target="_blank">
                   <motion.div
                     whileHover={{ scale: 0.95 }}
                     className="rounded-full select-none border-2 border-gray-400 hover:border-gray-900 size-9 flex justify-center items-center transition">
                     <div className="rounded-full hover:opacity-80 bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-7 flex justify-center items-center font-semibold text-lg">
-                      {/*    {adminUserInfo?.name.charAt(0).toUpperCase()}
-                            {adminUserInfo?.name.charAt(adminUserInfo?.name.length - 1).toUpperCase()} */}
+                    
                       <img src={logo} alt="logo" width={"20px"} />
                     </div>
+                  </motion.div>
+                </a> */}
+                <a href="https://webschema.online" target="_blank">
+                  <motion.div whileHover={{ scale: 0.95 }}>
+                    <img
+                      src={webschema}
+                      alt="logo"
+                      width={"30px"}
+                      className="drop-shadow-[0_10px_10px_rgba(0,0,0,0.4)]"
+                    />
                   </motion.div>
                 </a>
               </p>
