@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Instagram, Twitter, Facebook, ArrowUpRight } from "lucide-react";
-import logo from "../assets/logo.png";
 import webschema from "../assets/images/webschema.png";
 
 export default function Footer() {
