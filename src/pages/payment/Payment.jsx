@@ -173,7 +173,7 @@ function Payment() {
               </div>
               <div className="flex flex-col gap-2 mb-5">
                 <h1 className="font-bold">{subTotal().toFixed(3)} KD</h1>
-                <h1 className="font-bold">{deliveryStatus?.[0].shippingFee.toFixed(3)} KD</h1>
+                <h1 className="font-bold">{deliveryStatus?.[0]?.shippingFee?.toFixed(3)} KD</h1>
                 <hr />
                 <h1 className="font-bold">{totalCost().toFixed(3)} KD</h1>
               </div>
