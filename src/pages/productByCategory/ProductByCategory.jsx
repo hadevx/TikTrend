@@ -220,7 +220,7 @@ function ProductByCategory() {
           )}
 
           {/* Products Grid */}
-          <main className="flex-1 px-2">
+          <main className="flex-1  ">
             {isLoading ? (
               <Loader />
             ) : filteredProducts.length > 0 ? (
@@ -228,9 +228,9 @@ function ProductByCategory() {
                 <p className="mb-6 text-gray-700">
                   {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
                 </p>
-                <div className="grid grid-cols-2 sm:flex md:flex-wrap gap-4">
+                <div className="grid grid-cols-2 sm:flex md:flex-wrap gap-1">
                   {filteredProducts.map((product) => (
-                    <div key={product._id} className="w-[210px] md:min-w-[250px] rounded-lg">
+                    <div key={product._id} className="w-full md:min-w-[250px] rounded-lg">
                       <Product product={product} categoryTree={categoryTree || []} />
                     </div>
                   ))}

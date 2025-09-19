@@ -26,12 +26,10 @@ function Product() {
       refetch();
 
       if (product.variants?.length > 0) {
-        // Product with variants
         setActiveVariant(product.variants[0]);
         setActiveImage(product.variants[0].images?.[0]?.url || product.image?.[0]?.url);
         setSelectedSize(product.variants[0].sizes?.[0] || null);
       } else {
-        // Product without variants
         setActiveVariant(null);
         setActiveImage(product.image?.[0]?.url || "/placeholder.svg");
         setSelectedSize(null);
@@ -85,12 +83,17 @@ function Product() {
     toast.success(`${product.name} added to cart`, { position: "top-center" });
   };
 
+  const allImages =
+    product?.variants === 0
+      ? [...(product?.image || [])]
+      : [...(product?.variants?.flatMap((v) => v.images || []) || [])];
+
   return (
     <Layout>
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="container mt-[100px] justify-end  mx-auto flex flex-col sm:flex-row gap-10 min-h-screen">
+        <div className="container mt-[100px] justify-end mx-auto flex flex-col sm:flex-row gap-10 min-h-screen">
           {/* Left: Product Image */}
           <div className="w-full sm:w-2/3 md:w-1/2 lg:w-[500px] flex flex-col items-center">
             <div className="relative w-full h-[500px] overflow-hidden lg:rounded-xl shadow-lg">
@@ -107,29 +110,27 @@ function Product() {
               )}
             </div>
 
-            {/* Thumbnails */}
+            {/* ✅ Thumbnails for ALL variants */}
             <div className="flex gap-4 mt-5 justify-center flex-wrap">
-              {(activeVariant?.images?.length > 0 ? activeVariant.images : product?.image).map(
-                (img, idx) => (
-                  <img
-                    key={idx}
-                    src={img.url}
-                    alt={`Thumbnail ${idx + 1}`}
-                    className={clsx(
-                      "w-20 h-20 object-cover rounded-md cursor-pointer transition-all duration-200",
-                      img.url === activeImage
-                        ? "border-2 border-blue-500 opacity-70 shadow-md"
-                        : "border border-gray-300 hover:opacity-80"
-                    )}
-                    onClick={() => setActiveImage(img.url)}
-                  />
-                )
-              )}
+              {allImages.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img.url}
+                  alt={`Thumbnail ${idx + 1}`}
+                  className={clsx(
+                    "w-20 h-20 object-cover rounded-md cursor-pointer transition-all duration-200",
+                    img.url === activeImage
+                      ? "border-2 border-blue-500 opacity-70 shadow-md"
+                      : "border border-gray-300 hover:opacity-80"
+                  )}
+                  onClick={() => setActiveImage(img.url)}
+                />
+              ))}
             </div>
           </div>
 
           {/* Right: Product Info */}
-          <div className="relative px-3 flex flex-col rounded-2xl   lg:p-12 w-full sm:w-1/2 md:w-1/2  ">
+          <div className="relative px-3 flex flex-col rounded-2xl lg:p-12 w-full sm:w-1/2 md:w-1/2">
             <h1 className="text-3xl font-extrabold mb-4">{product?.name}</h1>
             <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
             {stock < 5 && (
@@ -137,7 +138,8 @@ function Product() {
                 Only {stock} left in stock
               </p>
             )}
-            {/* Color selection */}
+
+            {/* Colors */}
             {product?.variants?.length > 0 && (
               <div className="mb-4">
                 <span className="font-semibold block mb-2">Color:</span>
@@ -145,9 +147,7 @@ function Product() {
                   {product?.variants?.map((variant) => (
                     <button
                       key={variant._id}
-                      className={clsx(
-                        "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-transform"
-                      )}
+                      className="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-transform"
                       style={{ backgroundColor: variant?.color?.toLowerCase() }}
                       onClick={() => {
                         setActiveVariant(variant);
@@ -203,7 +203,7 @@ function Product() {
               )}
             </div>
 
-            {/* Quantity controls */}
+            {/* Quantity */}
             <div className="flex items-center gap-6 mb-6">
               <button
                 onClick={handleDecrement}
@@ -231,10 +231,10 @@ function Product() {
             {/* Add to Cart */}
             <button
               className={clsx(
-                "px-6 py-4 sticky bottom-2  rounded-xl font-bold uppercase transition-all shadow-md",
+                "px-6 py-4 sticky bottom-2 rounded-xl font-bold uppercase transition-all shadow-md",
                 stock === 0
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gradient-to-t from-zinc-900 to-zinc-700  shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995] text-white "
+                  : "bg-gradient-to-t from-zinc-900 to-zinc-700 shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995] text-white"
               )}
               onClick={handleAddToCart}
               disabled={stock === 0}>

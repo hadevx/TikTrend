@@ -47,7 +47,7 @@ function AllProducts() {
           />
           <motion.div
             variants={containerVariants}
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 lg:gap-6 ">
             {products?.map((product) => (
               <motion.div
                 key={product._id}

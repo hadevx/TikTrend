@@ -74,6 +74,12 @@ function Product({ product }) {
           className="w-full h-60 sm:h-64 md:h-56 lg:h-60 object-cover group-hover:scale-105 transition-transform duration-300"
         />
 
+        {/*     <button
+          onClick={handleAddToCart}
+          className="absolute z-50 right-0 bottom-0 bg-gradient-to-t from-zinc-900 to-zinc-700  shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995] p-2 text-white rounded-tl-lg">
+          <ShoppingCart />
+        </button> */}
+
         {stock < 5 && (
           <span className="absolute top-2 left-2 bg-orange-100 border-orange-500 border text-orange-500 text-xs font-semibold px-2 py-1 rounded-full ">
             Low stock
@@ -86,11 +92,11 @@ function Product({ product }) {
         )}
       </Link>
 
-      <div className="p-4 flex flex-col justify-between h-full">
+      <div className="p-2 flex flex-col justify-between h-full">
         <div>
           <p className="text-gray-500 text-sm mb-1 truncate">{product?.category?.name}</p>
-          <div className="flex items-center justify-between">
-            <h2 className="text-gray-900 font-semibold max-w-[100px]  lg:text-lg truncate ">
+          <div className="flex items-start flex-col  justify-between">
+            <h2 className="text-gray-900 font-semibold truncate max-w-full  lg:text-lg  ">
               {product?.name}
             </h2>
             <div className="text-sm sm:text-base">
@@ -149,7 +155,7 @@ function Product({ product }) {
           )}
         </div>
 
-        <div className="mt-3">
+        <div className="mt-3 ">
           <button
             onClick={handleAddToCart}
             disabled={stock === 0}

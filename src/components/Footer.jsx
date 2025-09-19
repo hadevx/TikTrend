@@ -110,17 +110,7 @@ export default function Footer() {
             <p>&copy; {currentYear} WebSchema. All rights reserved.</p>
             <div className="flex space-x-6">
               <p className="hover:text-neutral-700 transition-colors flex items-center gap-2">
-                Designed by
-                {/*    <a href="https://ws-opal-alpha.vercel.app/" target="_blank">
-                  <motion.div
-                    whileHover={{ scale: 0.95 }}
-                    className="rounded-full select-none border-2 border-gray-400 hover:border-gray-900 size-9 flex justify-center items-center transition">
-                    <div className="rounded-full hover:opacity-80 bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-7 flex justify-center items-center font-semibold text-lg">
-                    
-                      <img src={logo} alt="logo" width={"20px"} />
-                    </div>
-                  </motion.div>
-                </a> */}
+                Created by
                 <a href="https://webschema.online" target="_blank">
                   <motion.div whileHover={{ scale: 0.95 }}>
                     <img
