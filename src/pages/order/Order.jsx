@@ -38,7 +38,7 @@ const Order = () => {
           <h1 className="text-3xl font-bold mb-6 text-gray-800">
             Order placed, Thank you &hearts;
           </h1>
-          <div className="bg-white rounded-lg shadow border p-6 mb-6">
+          <div className="bg-white rounded-lg shadow border p-3 lg:p-6 mb-6">
             <div className="flex  justify-between items-center mb-4">
               <div>
                 <h2 className="text-sm lg:text-xl lg:flex lg:items-center lg:gap-2 font-semibold text-gray-800">
@@ -66,8 +66,8 @@ const Order = () => {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-2">Product</th>
-                    <th className="text-left py-2">Variants</th>
-                    <th className="text-center py-2">Quantity</th>
+                    <th className="text-left py-2">Color/Size</th>
+                    <th className="text-center py-2">Qty</th>
                     <th className="text-right py-2">Price</th>
                     <th className="text-right py-2">Total</th>
                   </tr>
@@ -110,9 +110,9 @@ const Order = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow border p-6 mb-6">
+          <div className="bg-white rounded-lg shadow border p-3 lg:p-6 mb-6">
             <h3 className="text-lg font-semibold mb-4">Customer Information</h3>
-            <div className="grid grid-cols-2">
+            <div className="grid grid-cols-2 gap-2">
               <div className="">
                 <div className="mb-2">
                   <p className="font-medium">Name:</p>
@@ -120,7 +120,7 @@ const Order = () => {
                 </div>
                 <div className="mb-2">
                   <p className="font-medium">Email:</p>
-                  <p className="text-gray-700">{userInfo?.email}</p>
+                  <p className="text-gray-700 break-words">{userInfo?.email}</p>
                 </div>
               </div>
               <div>

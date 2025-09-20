@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { useGetProductByIdQuery } from "../../redux/queries/productApi";
 import Loader from "../../components/Loader";
 import { Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function Product() {
   const dispatch = useDispatch();
@@ -93,57 +94,70 @@ function Product() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="container mt-[100px] justify-end mx-auto flex flex-col sm:flex-row gap-10 min-h-screen">
+        <div className="container mt-[60px] lg:mt-[100px] justify-end mx-auto flex flex-col sm:flex-row gap-5 lg:gap-10 min-h-screen">
           {/* Left: Product Image */}
-          <div className="w-full sm:w-2/3 md:w-1/2 lg:w-[500px] flex flex-col items-center">
-            <div className="relative w-full h-[500px] overflow-hidden lg:rounded-xl shadow-lg">
-              <img
-                src={activeImage}
-                loading="lazy"
-                alt={product?.name}
-                className="w-full h-full object-cover lg:rounded-xl transition-transform duration-300 hover:scale-105"
-              />
-              {stock < 5 && (
-                <p className="lg:hidden absolute z-50 top-0 px-2 py-1 text-orange-500 bg-orange-50 border border-orange-500 rounded-full">
+
+          <div className="w-full sm:w-2/3 md:w-1/2 lg:w-[500px]   flex flex-col items-center">
+            <div className="relative w-full h-[500px]  overflow-hidden lg:rounded-xl ">
+              {/* ✅ Animated Main Image */}
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activeImage} // key triggers animation on change
+                  src={activeImage}
+                  alt={product?.name}
+                  loading="lazy"
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                  className="absolute inset-0 w-full h-full object-cover lg:rounded-xl"
+                />
+              </AnimatePresence>
+
+              {/* Stock Badge */}
+              {/*      {stock < 5 && (
+                <p className="lg:hidden absolute z-50 top-0 left-0 px-2 py-1 text-orange-500 bg-orange-50 border border-orange-500 ">
                   Only {stock} left in stock
                 </p>
               )}
-            </div>
-
-            {/* ✅ Thumbnails for ALL variants */}
-            <div className="flex gap-4 mt-5 justify-center flex-wrap">
-              {allImages.map((img, idx) => (
-                <img
-                  key={idx}
-                  src={img.url}
-                  alt={`Thumbnail ${idx + 1}`}
-                  className={clsx(
-                    "w-20 h-20 object-cover rounded-md cursor-pointer transition-all duration-200",
-                    img.url === activeImage
-                      ? "border-2 border-blue-500 opacity-70 shadow-md"
-                      : "border border-gray-300 hover:opacity-80"
-                  )}
-                  onClick={() => setActiveImage(img.url)}
-                />
-              ))}
+ */}
+              {/* ✅ Thumbnails Overlayed Inside Main Image */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 bg-black/50 px-2 py-2 rounded-lg backdrop-blur-sm">
+                {allImages.map((img, idx) => (
+                  <motion.img
+                    key={idx}
+                    src={img.url}
+                    alt={`Thumbnail ${idx + 1}`}
+                    className={clsx(
+                      "w-14 h-14 object-cover rounded-md cursor-pointer transition-all duration-200",
+                      img.url === activeImage
+                        ? "ring-2 ring-blue-500 opacity-80"
+                        : "hover:opacity-80"
+                    )}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setActiveImage(img.url)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Right: Product Info */}
-          <div className="relative px-3 flex flex-col rounded-2xl lg:p-12 w-full sm:w-1/2 md:w-1/2">
-            <h1 className="text-3xl font-extrabold mb-4">{product?.name}</h1>
-            <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
+          <div className="relative mb-10 lg:mb-0 px-3 flex flex-col items-start  rounded-2xl lg:p-12 w-full sm:w-1/2 md:w-1/2">
             {stock < 5 && (
-              <p className="hidden lg:block absolute top-0 px-2 py-1 text-orange-500 bg-orange-50 border border-orange-500 rounded-full">
+              <p className=" px-2 py-1 text-orange-500  bg-orange-50 border border-orange-500 rounded-full">
                 Only {stock} left in stock
               </p>
             )}
+            <h1 className="text-3xl font-extrabold mb-4">{product?.name}</h1>
+            <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
 
             {/* Colors */}
             {product?.variants?.length > 0 && (
               <div className="mb-4">
                 <span className="font-semibold block mb-2">Color:</span>
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex lg:gap-3 flex-wrap">
                   {product?.variants?.map((variant) => (
                     <button
                       key={variant._id}
@@ -168,7 +182,7 @@ function Product() {
             {activeVariant?.sizes?.length > 0 && (
               <div className="mb-6">
                 <span className="font-semibold block mb-2">Sizes:</span>
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex lg:gap-3 flex-wrap">
                   {activeVariant?.sizes?.map((s) => (
                     <span
                       key={s.size}
@@ -231,7 +245,7 @@ function Product() {
             {/* Add to Cart */}
             <button
               className={clsx(
-                "px-6 py-4 sticky bottom-2 rounded-xl font-bold uppercase transition-all shadow-md",
+                "px-6 py-4 w-full sticky bottom-2 rounded-xl font-bold uppercase transition-all shadow-md",
                 stock === 0
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-gradient-to-t from-zinc-900 to-zinc-700 shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995] text-white"

@@ -187,9 +187,9 @@ function Profile() {
                       <h1 className="text-gray-700">Phone:</h1>
                     </div>
                     {!clickEditPersonal ? (
-                      <div className="flex flex-col gap-2 ">
+                      <div className="flex flex-col gap-2 flex-wrap">
                         <h1 className="font-bold">{userInfo?.name}</h1>
-                        <h1 className="font-bold">{userInfo?.email}</h1>
+                        <h1 className="font-bold break-all  ">{userInfo?.email}</h1>
                         <h1 className="font-bold">{userInfo?.phone}</h1>
                       </div>
                     ) : (
