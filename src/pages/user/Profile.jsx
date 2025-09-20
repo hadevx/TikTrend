@@ -1,28 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Layout from "../../Layout";
 import { useSelector, useDispatch } from "react-redux";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { HousePlus, PencilLine, Info } from "lucide-react";
-import { logout } from "../../redux/slices/authSlice";
+import { useNavigate, useParams } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
+import { logout, setUserInfo } from "../../redux/slices/authSlice";
 import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
 import { motion } from "framer-motion";
-import Badge from "../../components/Badge";
 import {
   useUpdateUserMutation,
   useUpdateAddressMutation,
   useLogoutMutation,
   useGetAddressQuery,
-  useGetUserDetailsQuery,
 } from "../../redux/queries/userApi";
-import { setUserInfo } from "../../redux/slices/authSlice";
-import { provinces } from "../../assets/data/addresses.js";
 import { useGetMyOrdersQuery } from "../../redux/queries/orderApi.js";
-import Message from "../../components/Message.jsx";
-import clsx from "clsx";
-import { Button, Prompt } from "@medusajs/ui";
-import { Tooltip } from "@medusajs/ui";
 import AddressModal from "../address/AddressModal.jsx";
+import one from "../../assets/levels/one.png";
+import { provinces } from "../../assets/data/addresses.js";
+// import Level from "../../components/Level.jsx";
+import UserLevel from "../../components/Level.jsx";
 
 function Profile() {
   const [clickEditPersonal, setClickEditPersonal] = useState(false);
@@ -36,376 +32,293 @@ function Profile() {
   const [selectedProvince, setSelectedProvince] = useState("");
   const [cities, setCities] = useState([]);
   const [city, setCity] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { id } = useParams();
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  //API update user
-  const [updateUser] = useUpdateUserMutation();
-
-  //API get user details
-  /*   const { data: userInfo } = useGetUserDetailsQuery(id);
-  console.log(userInfo); */
-
-  //Get user state
   const userInfo = useSelector((state) => state.auth.userInfo);
 
-  //API get address
   const { data: userAddress, refetch } = useGetAddressQuery(userInfo?._id);
-
-  // console.log(userAddress);
-  //API get my orders
   const { data: myorders } = useGetMyOrdersQuery();
-  //6899b5fdeba95344aa21bced
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  //API update address
+  const level = myorders?.length || 10;
+
+  const [updateUser] = useUpdateUserMutation();
   const [updateAddress, { isLoading: loadingAddress }] = useUpdateAddressMutation();
+  const [logoutApiCall, { isLoading }] = useLogoutMutation();
 
-  //API logout
-  const [logoutApiCall, { isLoading, error }] = useLogoutMutation();
-
+  // logout
   const handleLogout = async () => {
     await logoutApiCall().unwrap();
     dispatch(logout());
     navigate("/");
   };
 
+  // update user info
   const handleUpdatePersonal = async () => {
     try {
       if (newPhone && newPhone.length !== 8) {
         toast.error("Please enter a valid phone number");
         return;
       }
-
-      /* EMAIL VALIDATION */
-
-      const res = await updateUser({ name: newName, email: newEmail, phone: newPhone }).unwrap();
+      const res = await updateUser({
+        name: newName || userInfo?.name,
+        email: newEmail || userInfo?.email,
+        phone: newPhone || userInfo?.phone,
+      }).unwrap();
 
       dispatch(setUserInfo(res));
-      toast.success("Updated user name", { position: "top-center" });
-      setClickEditPersonal(!clickEditPersonal);
+      toast.success("Updated successfully", { position: "top-center" });
+      setClickEditPersonal(false);
     } catch (error) {
       toast.error(error?.data?.message);
     }
   };
+
+  // update address
   const handleUpdateAddress = async () => {
-    const res = await updateAddress({
+    await updateAddress({
       governorate: selectedProvince,
-      city: city,
+      city,
       block: newBlock,
       street: newStreet,
       house: newHouse,
     });
-
     refetch();
-
-    setClickEditAddress(!clickEditAddress);
-    /* dispatch(setUserInfo({ ...userInfo, address: res })); */
-    toast.success("Updated user name", { position: "top-center" });
+    setClickEditAddress(false);
+    toast.success("Updated address", { position: "top-center" });
   };
 
-  // Update cities based on selected province
-  const handleProvinceChange = (event) => {
-    const provinceName = event.target.value;
+  // provinces → cities
+  const handleProvinceChange = (e) => {
+    const provinceName = e.target.value;
     setSelectedProvince(provinceName);
     const province = provinces.find((p) => p.name === provinceName);
-
-    if (province) {
-      setCities(province.cities);
-    } else {
-      setCities([]);
-    }
-  };
-  const handleCityChange = (e) => {
-    setCity(e.target.value);
-  };
-  const containerVariants = {
-    visible: {
-      transition: {
-        staggerChildren: 0.1, // Change the stagger delay as needed
-        delayChildren: 0.1, // Add delay before the first child starts animating
-      },
-    },
+    setCities(province ? province.cities : []);
   };
 
-  const childVariants = {
-    hidden: { opacity: 0, scale: 0.98 },
-    visible: { opacity: 1, scale: 1 },
-  };
+  const handleCityChange = (e) => setCity(e.target.value);
+
   return (
     <Layout>
-      <motion.div className="flex gap-10 mt-[70px] flex-col lg:flex-row  justify-center min-h-screen px-2 py-5">
-        <div className="lg:w-[50%]">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="flex flex-col gap-5  ">
-            <h1 className="text-3xl font-bold ">My profile</h1>
-            <motion.div
-              variants={childVariants}
-              className="flex items-center justify-between border shadow bg-zinc-50 p-5 lg:p-7  rounded-lg">
-              <div className="flex items-center gap-2 lg:gap-5">
-                <div className=" rounded-[50%] hover:from-rose-500/80 hover:to-rose-600 bg-gradient-to-r shadow-lg drop-shadow-lg font-bold text-md lg:text-3xl from-gray-500 to-gray-700 text-white size-[40px] lg:size-[100px] flex justify-center items-center">
-                  {userInfo?.name?.charAt(0).toUpperCase()}
-                  {userInfo?.name?.charAt(userInfo?.name?.length - 1).toUpperCase()}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="font-extrabold text-2xl lg:text-3xl ">{userInfo?.name}</h1>
-                    {/*  {userInfo?.isAdmin && <Badge variant="admin">admin user</Badge>} */}
-                  </div>
-                </div>
+      <motion.div
+        transition={{ duration: 0.6 }}
+        className="min-h-screen flex  flex-col items-center bg-gradient-to-b from-rose-50 to-zinc-100">
+        {/* Header */}
+        <div className="w-full relative  flex flex-col items-center p-6 bg-gradient-to-tr from-zinc-700 to-zinc-900  shadow-lg">
+          <div className="absolute left-5 top-5 p-1 shadow-[0_5px_10px_rgba(255,255,255,0.5)] hover:bg-zinc-100 cursor-pointer bg-zinc-50 rounded-md ">
+            <ChevronLeft className="text-black" onClick={() => navigate(-1)} />
+          </div>
+
+          {/* Avatar */}
+          {/*  <div className="relative">
+            <div className="w-28 h-28 rounded-full overflow-hidden ">
+              <img src={one} alt="avatar" className="w-full h-full object-cover" />
+            </div>
+            <span className="absolute -bottom-2 -right-2 ">
+              <Level level={myorders?.length || 1} />
+            </span>
+          </div> */}
+          <UserLevel level={level} />
+
+          <h1 className="mt-4 text-2xl font-extrabold text-white">{userInfo?.name}</h1>
+          <p className="text-sm text-rose-100">{userInfo?.email}</p>
+
+          <div className="flex gap-5 mt-4">
+            <button
+              onClick={handleLogout}
+              disabled={isLoading}
+              className="bg-white  text-black px-4 py-2 rounded-full shadow-[0_5px_10px_rgba(255,255,255,0.5)] font-bold text-sm">
+              {isLoading ? <Spinner className="border-t-transparent" /> : "Log out"}
+            </button>
+            <button
+              onClick={() => setClickEditPersonal(true)}
+              className="bg-white text-black px-4 py-2 rounded-full shadow-[0_5px_10px_rgba(255,255,255,0.5)] font-bold text-sm">
+              Edit
+            </button>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="w-full px-2 mt-6  flex flex-col gap-2">
+          {/* Personal */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h2 className="font-bold text-lg mb-3">Personal Info</h2>
+            {!clickEditPersonal ? (
+              <div className="space-y-2 text-sm text-gray-700">
+                <p>
+                  <span className="font-semibold">Name:</span> {userInfo?.name}
+                </p>
+                <p>
+                  <span className="font-semibold">Phone:</span> {userInfo?.phone}
+                </p>
               </div>
-              <div className="flex flex-row-reverse items-center gap-2 lg:gap-5">
-                <button
-                  onClick={handleLogout}
-                  disabled={isLoading}
-                  className={clsx(
-                    "bg-gradient-to-t text-xs  lg:text-base items-center flex justify-center  transition-all duration-300  p-3 rounded-md text-white font-bold ",
-                    isLoading
-                      ? "from-gray-500 to-gray-400"
-                      : "bg-rose-500 shadow-[0_7px_15px_rgba(244,63,94,0.6)] hover:bg-rose-600"
-                  )}>
-                  {isLoading ? <Spinner className="border-t-transparent" /> : "Log Out"}
-                </button>
-              </div>
-            </motion.div>
-            <motion.div
-              variants={childVariants}
-              className="flex flex-col gap-5 border shadow bg-zinc-50 p-5 lg:p-7  rounded-lg">
-              <h1 className="font-extrabold text-xl mb-3">Personal Information</h1>
-              <div className="flex  justify-between">
-                <div className="">
-                  <div className="flex gap-5 lg:gap-20">
-                    <div className="flex  flex-col gap-2 ">
-                      <h1 className="text-gray-700">Name:</h1>
-                      <h1 className="text-gray-700">Email:</h1>
-                      <h1 className="text-gray-700">Phone:</h1>
-                    </div>
-                    {!clickEditPersonal ? (
-                      <div className="flex flex-col gap-2 flex-wrap">
-                        <h1 className="font-bold">{userInfo?.name}</h1>
-                        <h1 className="font-bold break-all  ">{userInfo?.email}</h1>
-                        <h1 className="font-bold">{userInfo?.phone}</h1>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col lg:flex-row items-center gap-5">
-                        <div className="flex flex-col gap-1">
-                          <input
-                            value={newName}
-                            placeholder={userInfo?.name}
-                            className="rounded-lg w-[150px] lg:w-full px-2 bg-gray-100/50 border shadow  outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
-                            onChange={(e) => setNewName(e.target.value)}
-                          />
-                          <input
-                            type="email"
-                            value={newEmail}
-                            placeholder={userInfo?.email}
-                            className="rounded-lg w-[150px] lg:w-full px-2 bg-gray-100/50 border shadow  outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
-                            onChange={(e) => setNewEmail(e.target.value)}
-                          />
-                          <input
-                            type="number"
-                            value={newPhone}
-                            placeholder={userInfo?.phone}
-                            className="rounded-lg w-[150px] lg:w-full px-2 bg-gray-100/50 border shadow outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
-                            onChange={(e) => setNewPhone(e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <button
-                            onClick={handleUpdatePersonal}
-                            disabled={isLoading}
-                            className="bg-gradient-to-t text-xs lg:text-lg  from-zinc-200 to-zinc-50 p-3 rounded-lg text-black font-bold drop-shadow-md ">
-                            update
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder={userInfo?.name}
+                  className="px-3 py-2 rounded-lg border bg-gray-50"
+                />
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder={userInfo?.email}
+                  className="px-3 py-2 rounded-lg border bg-gray-50"
+                />
+                <input
+                  type="number"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  placeholder={userInfo?.phone}
+                  className="px-3 py-2 rounded-lg border bg-gray-50"
+                />
+                <div className="flex gap-3">
                   <button
-                    onClick={() => setClickEditPersonal(!clickEditPersonal)}
-                    disabled={isLoading}
-                    className="bg-gradient-to-t hover:opacity-70 transition-all duration-300 text-xs lg:text-lg lg:text-md gap-2 items-center flex justify-center from-zinc-200 to-zinc-50 p-3 rounded-lg text-black font-bold drop-shadow-md ">
-                    {clickEditPersonal ? "Cancel" : <PencilLine size={18} />}
+                    onClick={handleUpdatePersonal}
+                    className="flex-1 bg-rose-500 text-white py-2 rounded-lg font-bold">
+                    Update
+                  </button>
+                  <button
+                    onClick={() => setClickEditPersonal(false)}
+                    className="flex-1 bg-gray-200 py-2 rounded-lg font-bold">
+                    Cancel
                   </button>
                 </div>
               </div>
-            </motion.div>
-            {userAddress ? (
-              <motion.div
-                variants={childVariants}
-                className="flex flex-col gap-5 border bg-zinc-50 p-5 lg:p-7  shadow rounded-lg">
-                <h1 className="font-extrabold text-xl mb-3 items-center flex gap-2">
-                  Address{" "}
-                  <Tooltip
-                    content="It's user responsibility to provide correct address"
-                    className="bg-white shadow px-2 py-1 text-sm">
-                    <Info size={20} />
-                  </Tooltip>
-                </h1>
-                <div className="flex justify-between">
-                  <div>
-                    <div className="flex gap-5 lg:gap-14 ">
-                      <div className="flex flex-col gap-2 ">
-                        <h1 className="text-gray-700">Governorate:</h1>
-                        <h1 className="text-gray-700">City:</h1>
-                        <h1 className="text-gray-700">Block:</h1>
-                        <h1 className="text-gray-700">Street:</h1>
-                        <h1 className="text-gray-700">House:</h1>
-                      </div>
-                      {!clickEditAddress ? (
-                        <div className="flex flex-col gap-2 ">
-                          <h1 className="font-bold">{userAddress?.governorate}</h1>
-                          <h1 className="font-bold">{userAddress?.city}</h1>
-                          <h1 className="font-bold">{userAddress?.block}</h1>
-                          <h1 className="font-bold">{userAddress?.street}</h1>
-                          <h1 className="font-bold">{userAddress?.house}</h1>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col lg:flex-row items-center gap-5">
-                          <div className="flex flex-col gap-1">
-                            <select
-                              value={selectedProvince}
-                              onChange={handleProvinceChange}
-                              className="rounded-lg border  px-2  bg-zinc-100/50 cursor-pointer shadow-md w-[150px] lg:w-full focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] outline-0 focus:border-[#4A9DEC] focus:border">
-                              <option value="" disabled={true}>
-                                Choose province
-                              </option>
-                              {provinces?.map((province) => (
-                                <option key={province.name} value={province.name}>
-                                  {province.name}
-                                </option>
-                              ))}
-                            </select>
-                            <select
-                              value={city}
-                              onChange={handleCityChange}
-                              className=" rounded-lg  border shadow-md  px-2  w-[150px] lg:w-full bg-zinc-100/50 outline-0 cursor-pointer focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border">
-                              <option value="" disabled={true}>
-                                Choose city
-                              </option>
-                              {cities?.map((city, index) => (
-                                <option key={index} value={city}>
-                                  {city}
-                                </option>
-                              ))}
-                            </select>
-                            <input
-                              value={newBlock}
-                              placeholder={userAddress?.block}
-                              className="rounded-lg w-[150px] lg:w-full px-2 bg-gray-100/50 border shadow outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
-                              onChange={(e) => setNewBlock(e.target.value)}
-                            />
-                            <input
-                              value={newStreet}
-                              placeholder={userAddress?.street}
-                              className="rounded-lg w-[150px] lg:w-full px-2 bg-gray-100/50 border shadow outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
-                              onChange={(e) => setNewStreet(e.target.value)}
-                            />
-                            <input
-                              value={newHouse}
-                              placeholder={userAddress?.house}
-                              className="rounded-lg w-[150px] lg:w-full px-2 bg-gray-100/50 border shadow outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
-                              onChange={(e) => setNewHouse(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <button
-                              onClick={handleUpdateAddress}
-                              disabled={isLoading}
-                              className="bg-gradient-to-t text-xs lg:text-lg  from-zinc-200 to-zinc-50 p-3 rounded-lg text-black font-bold drop-shadow-md ">
-                              update
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => setClickEditAddress(!clickEditAddress)}
-                      disabled={isLoading}
-                      className="bg-gradient-to-t text-xs lg:text-lg lg:text-md gap-2 items-center flex justify-center from-zinc-200 to-zinc-50 p-3 rounded-lg text-black font-bold drop-shadow-md ">
-                      {clickEditAddress ? "Cancel" : <PencilLine size={18} />}
-                    </button>
-                  </div>
+            )}
+          </div>
+
+          {/* Address */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h2 className="font-bold text-lg mb-3">Address</h2>
+            {!clickEditAddress ? (
+              userAddress ? (
+                <div className="space-y-2 text-sm text-gray-700">
+                  <p>
+                    <span className="font-semibold">Governorate:</span> {userAddress?.governorate}
+                  </p>
+                  <p>
+                    <span className="font-semibold">City:</span> {userAddress?.city}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Street:</span> {userAddress?.street}
+                  </p>
+                  <p>
+                    <span className="font-semibold">House:</span> {userAddress?.house}
+                  </p>
+                  <button
+                    onClick={() => setClickEditAddress(true)}
+                    className="text-rose-600 text-sm font-semibold mt-2">
+                    Edit Address
+                  </button>
                 </div>
-              </motion.div>
-            ) : (
-              <>
+              ) : (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="flex  cursor-pointer items-center gap-5 border bg-zinc-50 p-7 shadow rounded-lg">
-                  <h1 className="font-extrabold text-xl ">Add your Address</h1>
-                  <HousePlus />
+                  className="text-rose-600 font-semibold">
+                  + Add your address
                 </button>
-
-                <AddressModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-              </>
-            )}
-          </motion.div>
-        </div>
-        {myorders?.length === 0 ? (
-          <div className=" lg:w-[30%] ">
-            <h1 className="text-3xl font-bold ">
-              My orders <span className="text-sm text-blue-600 ">({myorders?.length})</span>
-            </h1>
-            <Message dismiss={false}>You don't have orders</Message>
-          </div>
-        ) : (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="flex flex-col gap-5 h-screen overflow-y-scroll">
-            <h1 className="text-3xl font-bold ">My orders ({myorders?.length})</h1>
-            {myorders?.map((order) => (
-              <motion.div
-                key={order._id}
-                variants={childVariants}
-                className=" hover:bg-zinc-200/5  gap-5 border bg-zinc-200/10 py-5 drop-shadow-lg shadow rounded-lg">
-                <div className="flex flex-col gap-5">
-                  <Link to={`/order/${order?._id}`} className="grid grid-cols-3  gap-5 ">
-                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base ">
-                      Placed in:{" "}
-                      <span className="font-bold"> {order?.createdAt.substring(0, 10)}</span>
-                    </h1>
-                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base">
-                      Payment method: <span className="font-bold">{order?.paymentMethod}</span>
-                    </h1>
-                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base">
-                      Total price:{" "}
-                      <span className="font-bold">{order?.totalPrice.toFixed(3)} KD</span>
-                    </h1>
-                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base">
-                      Products:
-                      <span className="font-bold">{order?.orderItems.length}</span>
-                    </h1>
-                    <h1 className="flex flex-col gap-2 items-center text-sm md:text-base">
-                      Status:
-                      <span className="font-bold text-sm">
-                        {order?.isDelivered ? (
-                          <Badge variant="success">Delivered </Badge>
-                        ) : order?.isCanceled ? (
-                          <Badge variant="danger">Canceled</Badge>
-                        ) : (
-                          <Badge variant="pending">Processing</Badge>
-                        )}
-                      </span>
-                    </h1>
-                  </Link>
+              )
+            ) : (
+              <div className="flex flex-col gap-3">
+                <select
+                  value={selectedProvince}
+                  onChange={handleProvinceChange}
+                  className="px-3 py-2 rounded-lg border bg-gray-50">
+                  <option value="">Choose province</option>
+                  {provinces.map((p) => (
+                    <option key={p.name} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={city}
+                  onChange={handleCityChange}
+                  className="px-3 py-2 rounded-lg border bg-gray-50">
+                  <option value="">Choose city</option>
+                  {cities.map((c, i) => (
+                    <option key={i} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={newBlock}
+                  onChange={(e) => setNewBlock(e.target.value)}
+                  placeholder="Block"
+                  className="px-3 py-2 rounded-lg border bg-gray-50"
+                />
+                <input
+                  value={newStreet}
+                  onChange={(e) => setNewStreet(e.target.value)}
+                  placeholder="Street"
+                  className="px-3 py-2 rounded-lg border bg-gray-50"
+                />
+                <input
+                  value={newHouse}
+                  onChange={(e) => setNewHouse(e.target.value)}
+                  placeholder="House"
+                  className="px-3 py-2 rounded-lg border bg-gray-50"
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleUpdateAddress}
+                    disabled={loadingAddress}
+                    className="flex-1 bg-rose-500 text-white py-2 rounded-lg font-bold">
+                    {loadingAddress ? "Updating..." : "Update"}
+                  </button>
+                  <button
+                    onClick={() => setClickEditAddress(false)}
+                    className="flex-1 bg-gray-200 py-2 rounded-lg font-bold">
+                    Cancel
+                  </button>
                 </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+              </div>
+            )}
+          </div>
+
+          {/* Orders */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h2 className="font-bold text-lg mb-3">My Orders ({myorders?.length})</h2>
+            {myorders?.length === 0 ? (
+              <p className="text-gray-500">You don't have orders yet</p>
+            ) : (
+              myorders?.map((order) => (
+                <div key={order._id} className="p-3 border-b last:border-0">
+                  <p className="text-sm text-gray-600">
+                    {order?.createdAt.substring(0, 10)} ·{" "}
+                    <span className="font-semibold">{order?.totalPrice.toFixed(3)} KD</span>
+                  </p>
+                  <p className="text-xs">
+                    Status:{" "}
+                    <span
+                      className={
+                        order?.isDelivered
+                          ? "text-green-600"
+                          : order?.isCanceled
+                          ? "text-red-600"
+                          : "text-yellow-600"
+                      }>
+                      {order?.isDelivered
+                        ? "Delivered"
+                        : order?.isCanceled
+                        ? "Canceled"
+                        : "Processing"}
+                    </span>
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <AddressModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       </motion.div>
     </Layout>
   );

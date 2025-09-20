@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { Instagram, Twitter, Facebook, ArrowUpRight } from "lucide-react";
 import webschema from "/images/webschema.png";
+import { useLocation } from "react-router-dom";
+import clsx from "clsx";
 
 export default function Footer() {
+  const { pathname } = useLocation();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -36,7 +39,11 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-zinc-100 border-t border-white/[0.02] p-10">
+    <footer
+      className={clsx(
+        "bg-zinc-100 border-t border-white/[0.02] p-10",
+        pathname === "/profile" && "hidden"
+      )}>
       <div className="container-custom py-16 lg:py-20">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 mb-12">

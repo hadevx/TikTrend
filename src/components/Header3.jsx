@@ -121,7 +121,8 @@ export default function Header({ onSearch }) {
             ? isScrolled
               ? "bg-white/[0.02] text-black backdrop-blur-md"
               : "bg-white/[0.02] text-white "
-            : "backdrop-blur-md"
+            : "backdrop-blur-md",
+          pathname === "/profile" && "hidden"
         )}
         initial={{ y: -100 }}
         animate={{ y: 0 }}

@@ -144,7 +144,7 @@ function Product() {
           </div>
 
           {/* Right: Product Info */}
-          <div className="relative mb-10 lg:mb-0 px-3 flex flex-col items-start  rounded-2xl lg:p-12 w-full sm:w-1/2 md:w-1/2">
+          <div className="relative mb-10 px-3 flex flex-col items-start  rounded-2xl lg:p-12 w-full sm:w-1/2 md:w-1/2">
             {stock < 5 && (
               <p className=" px-2 py-1 text-orange-500  bg-orange-50 border border-orange-500 rounded-full">
                 Only {stock} left in stock
