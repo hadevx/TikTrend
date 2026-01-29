@@ -4,6 +4,8 @@ import { PackageCheck, Rocket, ShieldCheck } from "lucide-react"; // Added Packa
 import Reveal from "./Reveal";
 import BlurPanel from "./BlurPanel";
 import test from "../assets/images/test.webp";
+import test2 from "/images/img1.jpg";
+
 export function HeroSection() {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -38,7 +40,7 @@ export function HeroSection() {
   };
 
   return (
-    <section ref={containerRef} className="relative h-screen overflow-hidden">
+    <section ref={containerRef} className="relative  h-screen overflow-hidden">
       {/* Background Image with Cinematic Effects */}
       <motion.div
         className="absolute inset-0"
@@ -48,8 +50,8 @@ export function HeroSection() {
         transition={{ duration: 1.2, ease: [0.21, 0.47, 0.32, 0.98] }}>
         {/* Use a wrapper for sizing if you want "fill"-like behavior */}
         <div className="absolute inset-0">
-          <img src={test} alt="Test" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/20" />
+          <img src={test2} alt="Test" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/30" />
         </div>
       </motion.div>
 

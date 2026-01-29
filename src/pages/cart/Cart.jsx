@@ -23,6 +23,7 @@ function Cart() {
   const { data: products } = useGetAllProductsQuery();
   const { data: userAddress } = useGetAddressQuery(userInfo?._id);
 
+  console.log(deliveryStatus);
   // Remove non-existing products from cart
   useEffect(() => {
     if (products && cartItems.length > 0) {

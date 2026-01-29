@@ -1,137 +1,149 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Instagram, Twitter, Facebook, ArrowUpRight } from "lucide-react";
+import { Instagram, Twitter, Facebook } from "lucide-react";
 import webschema from "/images/webschema.png";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
 
 export default function Footer() {
   const { pathname } = useLocation();
   const currentYear = new Date().getFullYear();
 
-  const footerLinks = {
-    Shop: [
-      { name: "New Arrivals", href: "#" },
-      { name: "Chairs", href: "#" },
-      { name: "Tables", href: "#" },
-      { name: "Storage", href: "#" },
-      { name: "Lighting", href: "#" },
-    ],
-    Company: [
-      { name: "About", href: "#" },
-      { name: "Craftsmanship", href: "#" },
-      { name: "Sustainability", href: "#" },
-      { name: "Careers", href: "#" },
-      { name: "Press", href: "#" },
-    ],
-    Support: [
-      { name: "Contact", href: "#" },
-      { name: "Size Guide", href: "#" },
-      { name: "Care Instructions", href: "#" },
-      { name: "Shipping", href: "#" },
-      { name: "Returns", href: "#" },
-    ],
-  };
+  // Minimal, essential links only
+  const footerLinks = useMemo(
+    () => ({
+      Shop: [
+        { name: "All Products", href: "/all-products" },
+        { name: "New Arrivals", href: "/all-products" },
+      ],
+      Support: [
+        { name: "Contact", href: "/contact" },
+        { name: "Shipping", href: "/shipping" },
+        { name: "Returns", href: "/returns" },
+      ],
+      Legal: [
+        { name: "Privacy", href: "/privacy" },
+        { name: "Terms", href: "/terms" },
+      ],
+    }),
+    [],
+  );
 
-  const socialLinks = [
-    { name: "Instagram", icon: Instagram, href: "#" },
-    { name: "Twitter", icon: Twitter, href: "#" },
-    { name: "Facebook", icon: Facebook, href: "#" },
-  ];
+  const socialLinks = useMemo(
+    () => [
+      { name: "Instagram", icon: Instagram, href: "#" },
+      { name: "Twitter", icon: Twitter, href: "#" },
+      { name: "Facebook", icon: Facebook, href: "#" },
+    ],
+    [],
+  );
 
   return (
-    <footer
-      className={clsx(
-        "bg-zinc-100 border-t border-white/[0.02] p-10",
-        pathname === "/profile" && "hidden"
-      )}>
-      <div className="container-custom py-16 lg:py-20">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 mb-12">
-          {/* Brand Section */}
-          <div className="lg:col-span-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}>
-              <h3 className="text-2xl font-bold text-neutral-900 mb-4">WebSchema</h3>
-              <p className="text-neutral-600 mb-6 leading-relaxed">
-                WebSchema platform for creative individuals
-              </p>
-              <div className="flex space-x-4">
-                {socialLinks.map((social) => (
-                  <motion.a
-                    key={social.name}
-                    href={social.href}
-                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-all duration-200"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}>
-                    <social.icon size={18} />
-                    <span className="sr-only">{social.name}</span>
-                  </motion.a>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Links Sections */}
-          <div className="lg:col-span-8">
-            <div className="grid grid-cols-3 sm:grid-cols-3 gap-8 lg:gap-12">
-              {Object.entries(footerLinks).map(([category, links], index) => (
-                <motion.div
-                  key={category}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}>
-                  <h4 className="font-semibold text-neutral-900 mb-4">{category}</h4>
-                  <ul className="space-y-3">
-                    {links.map((link) => (
-                      <li key={link.name}>
-                        <a
-                          href={link.href}
-                          className="text-neutral-600 hover:text-neutral-900 transition-colors duration-200 group flex items-center">
-                          {link.name}
-                          <ArrowUpRight
-                            size={14}
-                            className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+    <footer className={clsx(pathname === "/profile" && "hidden")}>
+      <div className="relative overflow-hidden border-t border-neutral-200 bg-neutral-950 text-white">
+        {/* soft glow */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-[-220px] h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -right-40 bottom-[-220px] h-[520px] w-[520px] rounded-full bg-white/5 blur-3xl" />
         </div>
 
-        {/* Bottom Section */}
-        <motion.div
-          className="pt-8 pb-4 border-t border-neutral-200 flex justify-center items-center"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          viewport={{ once: true }}>
-          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-neutral-500 text-center">
-            <p>&copy; {currentYear} WebSchema. All rights reserved.</p>
-            <div className="flex space-x-6">
-              <p className="hover:text-neutral-700 transition-colors flex items-center gap-2">
-                Created by
-                <a href="https://webschema.online" target="_blank">
-                  <motion.div whileHover={{ scale: 0.95 }}>
-                    <img
-                      src={webschema}
-                      alt="logo"
-                      width={"30px"}
-                      className="drop-shadow-[0_10px_10px_rgba(0,0,0,0.4)]"
-                    />
+        <div className="container-custom relative px-4 sm:px-6 py-12 lg:py-16">
+          {/* Top */}
+          <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
+            {/* Brand */}
+            <div className="lg:col-span-4">
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}>
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
+                    <img src={webschema} alt="WebSchema" className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold tracking-tight">WebSchema</h3>
+                    <p className="text-xs text-white/60">Simple. Premium. Reliable.</p>
+                  </div>
+                </div>
+
+                <p className="mt-4 text-sm text-white/70 leading-relaxed">
+                  Thoughtfully curated pieces with a smooth shopping experience.
+                </p>
+
+                <div className="mt-5 flex items-center gap-2">
+                  {socialLinks.map((social) => (
+                    <motion.a
+                      key={social.name}
+                      href={social.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="h-10 w-10 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-white/70
+                                 hover:text-white hover:bg-white/10 transition"
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      aria-label={social.name}>
+                      <social.icon size={18} />
+                    </motion.a>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Links */}
+            <div className="lg:col-span-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
+                {Object.entries(footerLinks).map(([category, links], idx) => (
+                  <motion.div
+                    key={category}
+                    initial={{ opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: idx * 0.06 }}>
+                    <h4 className="text-sm font-semibold text-white">{category}</h4>
+                    <ul className="mt-4 space-y-3">
+                      {links.map((l) => (
+                        <li key={l.name}>
+                          <Link
+                            to={l.href}
+                            className="inline-flex items-center text-sm text-white/70 hover:text-white transition">
+                            {l.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
                   </motion.div>
-                </a>
-              </p>
+                ))}
+              </div>
             </div>
           </div>
-        </motion.div>
+
+          {/* Bottom */}
+          <motion.div
+            className="mt-10 border-t border-white/10 pt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.12 }}>
+            <p className="text-sm text-white/60">© {currentYear} WebSchema. All rights reserved.</p>
+
+            <a
+              href="https://webschema.online"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white transition">
+              <span>Created by</span>
+              <span className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+                <img
+                  src={webschema}
+                  alt="webschema.online"
+                  className="h-5 w-5 drop-shadow-[0_10px_10px_rgba(0,0,0,0.4)]"
+                />
+                <span className="text-white/80">webschema</span>
+              </span>
+            </a>
+          </motion.div>
+        </div>
       </div>
     </footer>
   );

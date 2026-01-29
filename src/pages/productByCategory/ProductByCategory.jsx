@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   useGetProductsByCategoryQuery,
@@ -7,25 +7,26 @@ import {
 import Layout from "../../Layout";
 import Product from "../../components/Product";
 import Loader from "../../components/Loader";
+import clsx from "clsx";
+import { Search, SlidersHorizontal, X, ChevronRight, Filter, RefreshCcw } from "lucide-react";
 
 function ProductByCategory() {
-  const { id } = useParams(); // category ID
+  const { id } = useParams();
   const { data: products, isLoading } = useGetProductsByCategoryQuery(id);
   const { data: categoryTree } = useGetCategoriesTreeQuery();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("all");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
-  const [showFilters, setShowFilters] = useState(false); // toggle for small screens
+  const [showFilters, setShowFilters] = useState(false);
 
   // ----------------------------
-  // Helper functions
+  // Helpers (same logic)
   // ----------------------------
-
   const findCategoryById = (catId, nodes) => {
     if (!Array.isArray(nodes)) return null;
     for (const node of nodes) {
-      if (String(node._id) === catId) return node;
+      if (String(node._id) === String(catId)) return node;
       if (node.children?.length) {
         const found = findCategoryById(catId, node.children);
         if (found) return found;
@@ -48,7 +49,7 @@ function ProductByCategory() {
     if (!Array.isArray(nodes)) return null;
     for (const node of nodes) {
       const newPath = [...path, node];
-      if (String(node._id) === catId) return newPath;
+      if (String(node._id) === String(catId)) return newPath;
       if (node.children?.length) {
         const found = findCategoryPath(catId, node.children, newPath);
         if (found) return found;
@@ -69,17 +70,18 @@ function ProductByCategory() {
   };
 
   // ----------------------------
-  // Computed values
+  // Computed
   // ----------------------------
-
   const categoryNode = useMemo(() => findCategoryById(id, categoryTree), [id, categoryTree]);
+
   const breadcrumbPath = useMemo(
     () => findCategoryPath(id, categoryTree) || [],
-    [id, categoryTree]
+    [id, categoryTree],
   );
+
   const allSubCategories = useMemo(
     () => (categoryNode ? flattenCategories(categoryNode.children || []) : []),
-    [categoryNode]
+    [categoryNode],
   );
 
   const filteredProducts = useMemo(() => {
@@ -103,144 +105,265 @@ function ProductByCategory() {
       });
   }, [products, categoryNode, selectedSubCategory, searchTerm, priceRange]);
 
+  const activeFilterCount =
+    (searchTerm ? 1 : 0) +
+    (selectedSubCategory !== "all" ? 1 : 0) +
+    (priceRange.min || priceRange.max ? 1 : 0);
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedSubCategory("all");
+    setPriceRange({ min: "", max: "" });
+  };
+
+  // ----------------------------
+  // UI Pieces
+  // ----------------------------
+  const FiltersPanel = ({ compact = false }) => (
+    <div className={clsx(compact ? "" : "sticky top-[96px]")}>
+      <div className="rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm">
+        <div className="flex items-center justify-between p-5">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-neutral-800" />
+            <h3 className="text-sm font-semibold text-neutral-900">Filters</h3>
+            {activeFilterCount > 0 && (
+              <span className="ml-1 inline-flex items-center rounded-full bg-neutral-900 px-2 py-0.5 text-xs font-medium text-white">
+                {activeFilterCount}
+              </span>
+            )}
+          </div>
+
+          {activeFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-800 hover:bg-neutral-50 transition">
+              <RefreshCcw className="h-3.5 w-3.5" />
+              Reset
+            </button>
+          )}
+        </div>
+
+        <div className="px-5 pb-5 space-y-5">
+          {/* Search */}
+          <div>
+            <label className="block text-xs font-medium text-neutral-700 mb-2">Search</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+              <input
+                type="text"
+                placeholder="Search products…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-2xl border border-neutral-200 bg-white pl-10 pr-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-neutral-900/10"
+              />
+            </div>
+          </div>
+
+          {/* Price */}
+          <div>
+            <label className="block text-xs font-medium text-neutral-700 mb-2">Price (KD)</label>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                inputMode="decimal"
+                placeholder="Min"
+                value={priceRange.min}
+                onChange={(e) => setPriceRange((prev) => ({ ...prev, min: e.target.value }))}
+                className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-neutral-900/10"
+              />
+              <input
+                type="number"
+                inputMode="decimal"
+                placeholder="Max"
+                value={priceRange.max}
+                onChange={(e) => setPriceRange((prev) => ({ ...prev, max: e.target.value }))}
+                className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-neutral-900/10"
+              />
+            </div>
+          </div>
+
+          {/* Subcategories */}
+          {allSubCategories.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 mb-2">
+                Subcategories
+              </label>
+              <div className="max-h-[340px] overflow-auto pr-1">
+                <div className="grid gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSubCategory("all")}
+                    className={clsx(
+                      "w-full text-left rounded-2xl px-3 py-2 text-sm border transition",
+                      selectedSubCategory === "all"
+                        ? "border-neutral-900 bg-neutral-900 text-white"
+                        : "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50",
+                    )}>
+                    All
+                  </button>
+
+                  {allSubCategories.map((sub) => (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => setSelectedSubCategory(sub.id)}
+                      title={sub.displayName}
+                      className={clsx(
+                        "w-full text-left rounded-2xl px-3 py-2 text-sm border transition",
+                        selectedSubCategory === sub.id
+                          ? "border-neutral-900 bg-neutral-900 text-white"
+                          : "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50",
+                      )}>
+                      {sub.displayName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   // ----------------------------
   // Render
   // ----------------------------
   return (
     <Layout>
-      <div className="min-h-screen mt-[70px] py-5 lg:px-28">
-        {/* Breadcrumb */}
-        <nav className="mb-4 px-2 text-gray-600 text-sm">
-          <ol className="flex items-center flex-wrap">
-            <li>
-              <Link to="/" className="hover:underline">
-                Home
-              </Link>
-            </li>
-            {breadcrumbPath.map((node, idx) => (
-              <li key={node._id} className="flex items-center">
-                <span className="mx-2">{">"}</span>
-                {idx === breadcrumbPath.length - 1 ? (
-                  <span className="capitalize text-gray-800 font-medium">{node.name}</span>
-                ) : (
-                  <Link to={`/category/${node._id}`} className="hover:underline capitalize">
-                    {node.name}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ol>
-        </nav>
-
-        <h1 className="text-4xl px-2 font-semibold mb-6 capitalize">
-          {categoryNode?.name || "Category"}
-        </h1>
-
-        {/* Toggle filter button on small screens */}
-        <div className="lg:hidden mb-4 px-2">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 bg-rose-500 text-white rounded-md">
-            {showFilters ? "Hide Filters" : "Show Filters"}
-          </button>
+      <div className="relative min-h-screen mt-[70px]">
+        {/* Soft background */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-neutral-50 to-white" />
+          <div className="absolute left-1/2 top-24 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-neutral-200/45 blur-3xl" />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar Filters */}
-          {(showFilters || window.innerWidth >= 1024) && (
-            <aside className="w-full lg:w-1/4 p-4 border border-gray-200 rounded-lg bg-white">
-              {/* Search */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Search</label>
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 w-full"
-                />
-              </div>
+        <div className="lg:container lg:mx-auto px-3 lg:px-10 py-8">
+          {/* Breadcrumb */}
+          <nav className="mb-5 text-sm text-neutral-600">
+            <ol className="flex items-center flex-wrap gap-1">
+              <li>
+                <Link to="/" className="hover:text-neutral-900 transition">
+                  Home
+                </Link>
+              </li>
+              {breadcrumbPath.map((node, idx) => (
+                <li key={node._id} className="flex items-center gap-1">
+                  <ChevronRight className="h-4 w-4 text-neutral-400" />
+                  {idx === breadcrumbPath.length - 1 ? (
+                    <span className="capitalize text-neutral-900 font-medium">{node.name}</span>
+                  ) : (
+                    <Link
+                      to={`/category/${node._id}`}
+                      className="hover:text-neutral-900 transition capitalize">
+                      {node.name}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </nav>
 
-              {/* Price Range */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Price</label>
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={priceRange.min}
-                    onChange={(e) => setPriceRange((prev) => ({ ...prev, min: e.target.value }))}
-                    className="border border-gray-300 rounded-md px-3 py-2 w-1/2"
-                  />
-                  <span>-</span>
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={priceRange.max}
-                    onChange={(e) => setPriceRange((prev) => ({ ...prev, max: e.target.value }))}
-                    className="border border-gray-300 rounded-md px-3 py-2 w-1/2"
-                  />
-                </div>
-              </div>
+          {/* Header */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-950 capitalize">
+                {categoryNode?.name || "Category"}
+              </h1>
+              <p className="mt-2 text-neutral-600">
+                {isLoading ? "Loading products…" : `${filteredProducts.length} items`}
+              </p>
+            </div>
 
-              {/* Subcategories */}
-              {allSubCategories.length > 0 && (
-                <div>
-                  <label className="block font-medium mb-2">Subcategories</label>
-                  <ul className="space-y-1">
-                    <li>
-                      <button
-                        onClick={() => setSelectedSubCategory("all")}
-                        className={`w-full text-left px-2 py-1 rounded ${
-                          selectedSubCategory === "all"
-                            ? "bg-rose-500 text-white"
-                            : "hover:bg-gray-100"
-                        }`}>
-                        All
-                      </button>
-                    </li>
-                    {allSubCategories.map((sub) => (
-                      <li key={sub.id}>
-                        <button
-                          onClick={() => setSelectedSubCategory(sub.id)}
-                          className={`w-full text-left px-2 py-1 rounded ${
-                            selectedSubCategory === sub.id
-                              ? "bg-rose-500 text-white"
-                              : "hover:bg-gray-100"
-                          }`}
-                          title={sub.displayName}>
-                          {sub.displayName}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            {/* Mobile filters button */}
+            <div className="lg:hidden">
+              <button
+                type="button"
+                onClick={() => setShowFilters(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-900 shadow-sm hover:bg-neutral-50 transition">
+                <SlidersHorizontal className="h-4 w-4" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="ml-1 inline-flex items-center rounded-full bg-neutral-900 px-2 py-0.5 text-xs font-medium text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-7 grid gap-6 lg:grid-cols-12">
+            {/* Desktop sidebar */}
+            <aside className="hidden lg:block lg:col-span-3">
+              <FiltersPanel />
             </aside>
-          )}
 
-          {/* Products Grid */}
-          <main className="flex-1  ">
-            {isLoading ? (
-              <Loader />
-            ) : filteredProducts.length > 0 ? (
-              <>
-                <p className="mb-6 text-gray-700">
-                  {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
-                </p>
-                <div className="grid grid-cols-2 sm:flex md:flex-wrap gap-1">
-                  {filteredProducts.map((product) => (
-                    <div key={product._id} className="w-full md:min-w-[250px] rounded-lg">
-                      <Product product={product} categoryTree={categoryTree || []} />
+            {/* Products */}
+            <main className="lg:col-span-9">
+              {isLoading ? (
+                <Loader />
+              ) : filteredProducts.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+                  {filteredProducts.map((p) => (
+                    <div key={p._id} className="rounded-3xl">
+                      <Product product={p} categoryTree={categoryTree || []} />
                     </div>
                   ))}
                 </div>
-              </>
-            ) : (
-              <p className="text-center text-gray-500">No products found matching your criteria.</p>
-            )}
-          </main>
+              ) : (
+                <div className="rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm p-10 text-center">
+                  <p className="text-neutral-700 font-medium">No products found</p>
+                  <p className="mt-2 text-sm text-neutral-500">
+                    Try adjusting your search or resetting filters.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-semibold text-white hover:bg-neutral-900 transition">
+                    <RefreshCcw className="h-4 w-4" />
+                    Reset filters
+                  </button>
+                </div>
+              )}
+            </main>
+          </div>
         </div>
+
+        {/* Mobile Filters Drawer */}
+        {showFilters && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
+            <div className="absolute right-0 top-0 h-full w-[92%] max-w-sm bg-white shadow-2xl">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="font-semibold text-neutral-900">Filters</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(false)}
+                  className="h-10 w-10 rounded-2xl border border-neutral-200 bg-white grid place-items-center"
+                  aria-label="Close filters">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="p-4">
+                <FiltersPanel compact />
+              </div>
+
+              <div className="p-4 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(false)}
+                  className="w-full rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-semibold text-white hover:bg-neutral-900 transition">
+                  Show results ({filteredProducts.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

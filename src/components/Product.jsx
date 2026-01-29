@@ -37,7 +37,7 @@ function Product({ product }) {
         p._id === product._id &&
         (selectedVariant
           ? p.variantId === selectedVariant._id && p.variantSize === selectedSize
-          : true)
+          : true),
     );
 
     if (productInCart && productInCart.qty >= stock) {
@@ -53,14 +53,14 @@ function Product({ product }) {
         variantImage: selectedVariant?.images || null,
         stock,
         qty: 1, // default add 1 item
-      })
+      }),
     );
 
     toast.success(
       `${product.name}${
         selectedVariant && selectedSize ? ` (${selectedVariant.color}, ${selectedSize})` : ""
       } added to cart`,
-      { position: "top-center" }
+      { position: "top-center" },
     );
   };
 
@@ -119,7 +119,7 @@ function Product({ product }) {
               <button
                 key={variant._id}
                 className={clsx(
-                  "relative w-6 h-6  rounded-full  flex items-center justify-center transition-all"
+                  "relative w-6 h-6  rounded-full  flex items-center justify-center transition-all",
                 )}
                 style={{ backgroundColor: variant?.color?.toLowerCase() }}
                 onClick={() => {
@@ -146,7 +146,7 @@ function Product({ product }) {
                     selectedSize === s.size
                       ? "bg-black text-white border-black"
                       : "bg-white text-gray-700 border-gray-300",
-                    s.stock === 0 && "opacity-50 cursor-not-allowed"
+                    s.stock === 0 && "opacity-50 cursor-not-allowed",
                   )}>
                   {s.size}
                 </button>
@@ -163,7 +163,7 @@ function Product({ product }) {
               "w-full px-3 py-3 rounded-lg font-semibold text-white text-sm lg:text-base transition-colors duration-300 flex items-center justify-center gap-2",
               stock === 0
                 ? "bg-gray-300 cursor-not-allowed"
-                : "bg-gradient-to-t from-zinc-900 to-zinc-700  shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995]"
+                : "bg-gradient-to-t from-zinc-900 to-zinc-700   hover:scale-[0.995]",
             )}>
             <ShoppingCart className="w-5 h-5" />
             <span>Add to Cart</span>

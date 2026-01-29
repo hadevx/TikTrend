@@ -37,7 +37,7 @@ function UserLevel({ level }) {
   return (
     <div className="relative">
       {/* Badge image */}
-      <div className="w-40 h-40 rounded-full overflow-hidden">
+      <div className="w-20 h-20 rounded-full overflow-hidden">
         <img
           src={badgeImage}
           alt={`Badge level ${clampedLevel}`}
@@ -61,7 +61,7 @@ const Level = ({ level }) => {
   return (
     <div
       className={clsx(
-        "inline-flex items-center px-3 py-1 rounded-full text-white font-bold text-xs",
+        "inline-flex items-center px-2 py-1 rounded-full text-white font-bold text-xs",
         color,
         shadow
       )}>
