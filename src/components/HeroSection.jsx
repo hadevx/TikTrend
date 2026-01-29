@@ -3,8 +3,7 @@ import { useRef } from "react";
 import { PackageCheck, Rocket, ShieldCheck } from "lucide-react"; // Added PackageCheck, Rocket, and ShieldCheck icon imports
 import Reveal from "./Reveal";
 import BlurPanel from "./BlurPanel";
-import test from "../assets/images/test.webp";
-import test2 from "/images/img1.jpg";
+import test2 from "/images/img1.webp";
 
 export function HeroSection() {
   const containerRef = useRef(null);
@@ -50,8 +49,9 @@ export function HeroSection() {
         transition={{ duration: 1.2, ease: [0.21, 0.47, 0.32, 0.98] }}>
         {/* Use a wrapper for sizing if you want "fill"-like behavior */}
         <div className="absolute inset-0">
-          <img src={test2} alt="Test" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/30" />
+          <img src={test2} alt="Test" className="w-full h-full object-cover object-[50%_70%]" />
+
+          <div className="absolute inset-0 bg-black/40" />
         </div>
       </motion.div>
 

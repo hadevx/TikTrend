@@ -304,7 +304,7 @@ function ProductByCategory() {
               {isLoading ? (
                 <Loader />
               ) : filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
                   {filteredProducts.map((p) => (
                     <div key={p._id} className="rounded-3xl">
                       <Product product={p} categoryTree={categoryTree || []} />
