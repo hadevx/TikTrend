@@ -36,7 +36,7 @@ export default function TrustHighlights() {
   );
 
   return (
-    <section className="relative overflow-hidden py-16 sm:py-20 lg:py-28">
+    <section className="relative overflow-hidden px-2 py-16 sm:py-20 lg:py-28">
       {/* Breathtaking but simple background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-white via-neutral-50 to-white" />

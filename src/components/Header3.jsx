@@ -158,7 +158,7 @@ export default function Header({ onSearch }) {
     <>
       <motion.header
         className={clsx(
-          "fixed top-0 left-0 right-0 z-50 px-2",
+          "fixed top-0 left-0 right-0 z-50 px-5 py-2 sm:py-0",
           "transition-all duration-300",
           isScrolled
             ? "backdrop-blur-xl bg-white/70 border-b border-neutral-200"

@@ -26,7 +26,7 @@ export default function FeaturedProducts({ products, isLoading }) {
   if (isLoading) return <Loader />;
 
   return (
-    <section className="relative py-16 lg:py-24 overflow-hidden" id="featured-products">
+    <section className="relative px-2 py-16 lg:py-24 overflow-hidden" id="featured-products">
       {/* Modern background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-white via-neutral-50 to-white" />
@@ -52,16 +52,6 @@ export default function FeaturedProducts({ products, isLoading }) {
               <p className="mt-3 text-base md:text-lg text-neutral-600 leading-relaxed">
                 Fresh arrivals curated for style and comfort. Tap any item for a quick look.
               </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link
-                to="/all-products"
-                className="group inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-900 shadow-sm transition
-                           hover:bg-neutral-50 hover:shadow-md">
-                View all
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
             </div>
           </div>
         </Reveal>

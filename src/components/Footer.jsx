@@ -40,7 +40,7 @@ export default function Footer() {
 
   return (
     <footer className={clsx(pathname === "/profile" && "hidden")}>
-      <div className="relative overflow-hidden border-t border-neutral-200 bg-neutral-950 text-white">
+      <div className="relative p-5 sm:p-0 overflow-hidden border-t border-neutral-200 bg-neutral-950 text-white">
         {/* soft glow */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-1/2 top-[-220px] h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-white/10 blur-3xl" />
@@ -58,9 +58,6 @@ export default function Footer() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}>
                 <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
-                    <img src={webschema} alt="WebSchema" className="h-6 w-6" />
-                  </div>
                   <div>
                     <h3 className="text-lg font-semibold tracking-tight">WebSchema</h3>
                     <p className="text-xs text-white/60">Simple. Premium. Reliable.</p>
