@@ -160,9 +160,6 @@ const Order = () => {
                 <h2 className="text-sm lg:text-xl lg:flex lg:items-center lg:gap-2 font-semibold text-gray-800">
                   Id #{order?._id} <Copy content={order?._id} />
                 </h2>
-                <p className="text-sm text-gray-600">
-                  Placed on {order?.createdAt?.substring(0, 10)}
-                </p>
               </div>
 
               <span className="px-3 py-1 rounded-full text-xs font-medium">

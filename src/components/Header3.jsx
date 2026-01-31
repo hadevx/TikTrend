@@ -325,12 +325,17 @@ export default function Header({ onSearch }) {
               type="button"
               onClick={() => setClicked((p) => !p)}
               className={clsx(
-                "inline-flex h-10 w-10 items-center justify-center rounded-2xl border transition",
-                pathname === "/" && !isScrolled
-                  ? "border-white/20 bg-white/10 text-white"
-                  : "border-neutral-200 bg-white text-neutral-900",
+                "relative inline-flex items-center gap-2 h-10 px-4 rounded-2xl border transition",
+                "bg-black text-white shadow-[0_1px_15px_rgba(0,0,0,0.5)] border-white/20 hover:border-white/30",
+                "active:scale-[0.98]",
               )}
               aria-label="Menu">
+              {/* Red / orange dot */}
+              <span className="h-2 w-2 rounded-full bg-gradient-to-br from-red-500 to-orange-400" />
+              {/* Menu text */}
+              <span className="text-sm font-medium">Menu</span>
+
+              {/* Icon */}
               {clicked ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>

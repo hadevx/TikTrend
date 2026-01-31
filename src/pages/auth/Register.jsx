@@ -144,8 +144,8 @@ function Register() {
               disabled={isLoading}
               type="submit"
               className="h-11 w-full rounded-xl bg-zinc-900 text-white font-semibold
-                hover:bg-zinc-800 disabled:opacity-70">
-              {!isLoading ? "Register" : <Spinner className="border-t-zinc-300" />}
+                hover:bg-zinc-800 disabled:opacity-70 flex items-center justify-center">
+              {!isLoading ? "Register" : <Spinner className="border-t-zinc-900" />}
             </button>
           </form>
 
