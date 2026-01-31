@@ -1,6 +1,6 @@
 export const provinces = [
   {
-    name: "Capital  العاصمه",
+    name: "Al Asimah  العاصمه",
     cities: [
       "Abdullah Al-Salem عبدالله السالم",
       "Adailiya العديليه",

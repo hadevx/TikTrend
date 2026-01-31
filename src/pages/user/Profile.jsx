@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Layout from "../../Layout";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +15,6 @@ import {
 import { useGetMyOrdersQuery } from "../../redux/queries/orderApi.js";
 import AddressModal from "../address/AddressModal.jsx";
 import { provinces } from "../../assets/data/addresses.js";
-import UserLevel from "../../components/Level.jsx";
 import clsx from "clsx";
 import {
   ArrowLeft,
@@ -30,8 +29,18 @@ import {
   XCircle,
   Clock3,
   ChevronRight,
-  RefreshCcw,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
+
+/**
+ * Change requested:
+ * ✅ "make address next to them"
+ * - On desktop: Personal info and Address are side-by-side (2 columns).
+ * - On mobile: they stack nicely.
+ * - Orders stays below in a full-width card.
+ * - Keeps your existing logic + modal + edits.
+ */
 
 function Profile() {
   const dispatch = useDispatch();
@@ -41,8 +50,6 @@ function Profile() {
 
   const { data: userAddress, refetch } = useGetAddressQuery(userInfo?._id);
   const { data: myorders } = useGetMyOrdersQuery();
-
-  const level = myorders?.length || 1;
 
   const [updateUser] = useUpdateUserMutation();
   const [updateAddress, { isLoading: loadingAddress }] = useUpdateAddressMutation();
@@ -75,7 +82,15 @@ function Profile() {
     return { total: list.length, delivered, canceled, processing };
   }, [myorders]);
 
-  // logout
+  // prevent any accidental horizontal scroll
+  useEffect(() => {
+    const prev = document.body.style.overflowX;
+    document.body.style.overflowX = "hidden";
+    return () => {
+      document.body.style.overflowX = prev;
+    };
+  }, []);
+
   const handleLogout = async () => {
     try {
       await logoutApiCall().unwrap();
@@ -86,7 +101,6 @@ function Profile() {
     }
   };
 
-  // update user info
   const handleUpdatePersonal = async () => {
     try {
       if (newPhone && newPhone.length !== 8) {
@@ -107,7 +121,6 @@ function Profile() {
     }
   };
 
-  // update address
   const handleUpdateAddress = async () => {
     try {
       await updateAddress({
@@ -116,7 +129,7 @@ function Profile() {
         block: newBlock,
         street: newStreet,
         house: newHouse,
-      }).unwrap?.();
+      }).unwrap();
 
       refetch();
       setEditAddress(false);
@@ -126,7 +139,6 @@ function Profile() {
     }
   };
 
-  // provinces → cities
   const handleProvinceChange = (e) => {
     const provinceName = e.target.value;
     setSelectedProvince(provinceName);
@@ -156,7 +168,7 @@ function Profile() {
     return (
       <span
         className={clsx(
-          "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold",
+          "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap",
           cfg.cls,
         )}>
         <Icon className="h-3.5 w-3.5" />
@@ -166,23 +178,28 @@ function Profile() {
   };
 
   const Card = ({ title, icon: Icon, action, children }) => (
-    <div className="rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm">
-      <div className="flex items-center justify-between p-5">
-        <div className="flex items-center gap-2">
-          {Icon ? <Icon className="h-4 w-4 text-neutral-800" /> : null}
-          <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
+    <div className="w-full min-w-0 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm">
+      <div className="flex items-center justify-between gap-3 p-5">
+        <div className="flex items-center gap-2 min-w-0">
+          {Icon ? <Icon className="h-4 w-4 text-neutral-800 shrink-0" /> : null}
+          <h2 className="text-sm font-semibold text-neutral-900 truncate">{title}</h2>
         </div>
-        {action}
+        <div className="shrink-0">{action}</div>
       </div>
-      <div className="px-5 pb-5">{children}</div>
+      <div className="px-5 pb-5 min-w-0">{children}</div>
     </div>
   );
+
+  const initial = String(userInfo?.name || "U")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
 
   return (
     <Layout>
       <div className="relative overflow-x-hidden bg-gray-100">
         {/* Background */}
-        <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-white via-neutral-50 to-white" />
           <div className="absolute left-1/2 top-24 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-neutral-200/45 blur-3xl" />
           <div className="absolute -right-24 top-80 h-64 w-64 rounded-full bg-neutral-200/30 blur-3xl" />
@@ -190,9 +207,9 @@ function Profile() {
 
         <motion.div
           transition={{ duration: 0.6 }}
-          className="min-h-screen max-w-6xl   lg:mx-auto mt-[70px] lg:mt-[110px] px-3 pb-16">
+          className="min-h-screen mx-auto w-full max-w-6xl mt-[70px] lg:mt-[110px] px-3 pb-16">
           {/* Top bar */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -218,21 +235,19 @@ function Profile() {
           </div>
 
           {/* Header */}
-          <div className="mt-6 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm p-5 md:p-7">
-            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-2xl bg-neutral-900 text-white grid place-items-center font-bold text-lg">
-                  {String(userInfo?.name || "U")
-                    .trim()
-                    .charAt(0)
-                    .toUpperCase()}
+          <div className="mt-6 w-full min-w-0 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm p-5 md:p-7">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between min-w-0">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="shrink-0 size-16 rounded-2xl bg-neutral-900 text-white grid place-items-center font-bold text-lg">
+                  {initial}
                 </div>
+
                 <div className="min-w-0">
                   <h1 className="truncate text-xl md:text-2xl font-semibold tracking-tight text-neutral-950">
                     {userInfo?.name}
                   </h1>
                   <p className="text-sm text-neutral-600 truncate">{userInfo?.email}</p>
-                  <p className="text-xs text-neutral-500 mt-1">
+                  <p className="text-xs text-neutral-500 mt-1 truncate">
                     {userInfo?.phone ? `+965 ${userInfo.phone}` : "Add your phone number"}
                   </p>
                 </div>
@@ -241,31 +256,32 @@ function Profile() {
 
             {/* Stats */}
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                <div className="text-xs text-neutral-500">Total orders</div>
+              <div className="min-w-0 rounded-2xl border border-neutral-200 bg-white px-4 py-3">
+                <div className="text-xs text-neutral-500 truncate">Total orders</div>
                 <div className="mt-1 text-lg font-semibold text-neutral-950">{stats.total}</div>
               </div>
-              <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                <div className="text-xs text-neutral-500">Processing</div>
+              <div className="min-w-0 rounded-2xl border border-neutral-200 bg-white px-4 py-3">
+                <div className="text-xs text-neutral-500 truncate">Processing</div>
                 <div className="mt-1 text-lg font-semibold text-neutral-950">
                   {stats.processing}
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                <div className="text-xs text-neutral-500">Delivered</div>
+              <div className="min-w-0 rounded-2xl border border-neutral-200 bg-white px-4 py-3">
+                <div className="text-xs text-neutral-500 truncate">Delivered</div>
                 <div className="mt-1 text-lg font-semibold text-neutral-950">{stats.delivered}</div>
               </div>
-              <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                <div className="text-xs text-neutral-500">Canceled</div>
+              <div className="min-w-0 rounded-2xl border border-neutral-200 bg-white px-4 py-3">
+                <div className="text-xs text-neutral-500 truncate">Canceled</div>
                 <div className="mt-1 text-lg font-semibold text-neutral-950">{stats.canceled}</div>
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="mt-6 grid lg:grid-cols-12 gap-6">
-            {/* Left column */}
-            <div className="lg:col-span-5 space-y-6">
+          <div className="mt-6 space-y-6 min-w-0">
+            {/* ✅ Personal + Address side-by-side on desktop */}
+            <div className="grid gap-6 lg:grid-cols-2 min-w-0">
+              {/* Personal */}
               {(tab === "overview" || tab === "account") && (
                 <Card
                   title="Personal information"
@@ -282,9 +298,9 @@ function Profile() {
                     ) : null
                   }>
                   {!editPersonal ? (
-                    <div className="grid gap-3 text-sm">
-                      <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                        <UserIcon className="h-4 w-4 text-neutral-600" />
+                    <div className="grid gap-3 text-sm min-w-0">
+                      <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 min-w-0">
+                        <UserIcon className="h-4 w-4 text-neutral-600 shrink-0" />
                         <div className="min-w-0">
                           <div className="text-xs text-neutral-500">Name</div>
                           <div className="truncate font-medium text-neutral-900">
@@ -293,8 +309,8 @@ function Profile() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                        <Mail className="h-4 w-4 text-neutral-600" />
+                      <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 min-w-0">
+                        <Mail className="h-4 w-4 text-neutral-600 shrink-0" />
                         <div className="min-w-0">
                           <div className="text-xs text-neutral-500">Email</div>
                           <div className="truncate font-medium text-neutral-900">
@@ -303,8 +319,8 @@ function Profile() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                        <Phone className="h-4 w-4 text-neutral-600" />
+                      <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 min-w-0">
+                        <Phone className="h-4 w-4 text-neutral-600 shrink-0" />
                         <div className="min-w-0">
                           <div className="text-xs text-neutral-500">Phone</div>
                           <div className="truncate font-medium text-neutral-900">
@@ -314,7 +330,7 @@ function Profile() {
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3 min-w-0">
                       <input
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
@@ -355,6 +371,7 @@ function Profile() {
                 </Card>
               )}
 
+              {/* Address */}
               {(tab === "overview" || tab === "address") && (
                 <Card
                   title="Shipping address"
@@ -378,28 +395,22 @@ function Profile() {
                       + Add your address
                     </button>
                   ) : !editAddress ? (
-                    <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-4 text-sm text-neutral-700 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-neutral-500">Governorate</span>
-                        <span className="font-medium text-neutral-900">
-                          {userAddress?.governorate}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-neutral-500">City</span>
-                        <span className="font-medium text-neutral-900">{userAddress?.city}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-neutral-500">Street</span>
-                        <span className="font-medium text-neutral-900">{userAddress?.street}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-neutral-500">House</span>
-                        <span className="font-medium text-neutral-900">{userAddress?.house}</span>
-                      </div>
+                    <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-4 text-sm text-neutral-700 space-y-2 min-w-0">
+                      {[
+                        ["Governorate", userAddress?.governorate],
+                        ["City", userAddress?.city],
+                        ["Block", userAddress?.block],
+                        ["Street", userAddress?.street],
+                        ["House", userAddress?.house],
+                      ].map(([k, v]) => (
+                        <div key={k} className="flex items-center justify-between gap-4 min-w-0">
+                          <span className="text-xs text-neutral-500">{k}</span>
+                          <span className="font-medium text-neutral-900 truncate">{v || "-"}</span>
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3 min-w-0">
                       <select
                         value={selectedProvince}
                         onChange={handleProvinceChange}
@@ -467,96 +478,81 @@ function Profile() {
               )}
             </div>
 
-            {/* Right column */}
-            <div className="lg:col-span-7">
-              {(tab === "overview" || tab === "orders") && (
-                <Card
-                  title={`My orders (${stats.total})`}
-                  icon={Package}
-                  action={
-                    stats.total > 0 ? (
+            {/* Orders section below (full width) */}
+            {(tab === "overview" || tab === "orders") && (
+              <Card title={`My orders (${stats.total})`} icon={Package} action={null}>
+                {stats.total === 0 ? (
+                  <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-10 text-center">
+                    <p className="font-semibold text-neutral-900">No orders yet</p>
+                    <p className="mt-1 text-sm text-neutral-500">
+                      Once you place an order, it will show up here.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/")}
+                      className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-semibold text-white hover:bg-neutral-900 transition">
+                      Start shopping
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3 min-w-0">
+                    {(Array.isArray(myorders) ? myorders : [])
+                      .slice(0, tab === "orders" ? 50 : 6)
+                      .map((order) => (
+                        <div
+                          key={order._id}
+                          className="rounded-2xl border border-neutral-200 bg-white px-4 py-4 hover:bg-neutral-50 transition min-w-0">
+                          <div className="flex items-start justify-between gap-3 min-w-0">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-neutral-900 truncate">
+                                Order #{String(order?._id).slice(-6).toUpperCase()}
+                              </p>
+                              <p className="mt-1 text-xs text-neutral-500">
+                                {order?.createdAt?.substring(0, 10)} • Total{" "}
+                                <span className="font-semibold text-neutral-900">
+                                  {order?.totalPrice?.toFixed(3)} KD
+                                </span>
+                              </p>
+                            </div>
+                            <OrderStatusPill order={order} />
+                          </div>
+
+                          <div className="mt-3 flex items-center justify-between gap-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toast.info("Order details screen not connected yet", {
+                                  position: "top-center",
+                                })
+                              }
+                              className="inline-flex items-center gap-1 text-sm font-semibold text-neutral-900">
+                              View details <ChevronRight className="h-4 w-4" />
+                            </button>
+
+                            <span className="text-xs text-neutral-500 whitespace-nowrap">
+                              {order?.isDelivered
+                                ? "Delivered"
+                                : order?.isCanceled
+                                  ? "Canceled"
+                                  : "In progress"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+
+                    {tab !== "orders" && stats.total > 6 && (
                       <button
                         type="button"
                         onClick={() => setTab("orders")}
-                        className="inline-flex items-center gap-1 rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
-                        View all <ChevronRight className="h-4 w-4" />
+                        className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition">
+                        View all orders
                       </button>
-                    ) : null
-                  }>
-                  {stats.total === 0 ? (
-                    <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-10 text-center">
-                      <p className="font-semibold text-neutral-900">No orders yet</p>
-                      <p className="mt-1 text-sm text-neutral-500">
-                        Once you place an order, it will show up here.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => navigate("/")}
-                        className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-semibold text-white hover:bg-neutral-900 transition">
-                        Start shopping
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {(Array.isArray(myorders) ? myorders : [])
-                        .slice(0, tab === "orders" ? 50 : 6)
-                        .map((order) => (
-                          <div
-                            key={order._id}
-                            className="rounded-2xl border border-neutral-200 bg-white px-4 py-4 hover:bg-neutral-50 transition">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-neutral-900">
-                                  Order #{String(order?._id).slice(-6).toUpperCase()}
-                                </p>
-                                <p className="mt-1 text-xs text-neutral-500">
-                                  {order?.createdAt?.substring(0, 10)} • Total{" "}
-                                  <span className="font-semibold text-neutral-900">
-                                    {order?.totalPrice?.toFixed(3)} KD
-                                  </span>
-                                </p>
-                              </div>
-
-                              <OrderStatusPill order={order} />
-                            </div>
-
-                            <div className="mt-3 flex items-center justify-between">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  toast.info("Order details screen not connected yet", {
-                                    position: "top-center",
-                                  })
-                                }
-                                className="inline-flex items-center gap-1 text-sm font-semibold text-neutral-900">
-                                View details <ChevronRight className="h-4 w-4" />
-                              </button>
-
-                              <span className="text-xs text-neutral-500">
-                                {order?.isDelivered
-                                  ? "Delivered"
-                                  : order?.isCanceled
-                                    ? "Canceled"
-                                    : "In progress"}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-
-                      {tab !== "orders" && stats.total > 6 && (
-                        <button
-                          type="button"
-                          onClick={() => setTab("orders")}
-                          className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition">
-                          View all orders
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </Card>
-              )}
-            </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            )}
           </div>
 
           <AddressModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />

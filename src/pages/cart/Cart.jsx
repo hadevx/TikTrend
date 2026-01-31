@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Layout from "../../Layout";
 import { useSelector, useDispatch } from "react-redux";
-import { Trash2, Truck } from "lucide-react";
+import { Trash2, Truck, ShieldCheck, ArrowRight, ShoppingBag } from "lucide-react";
 import { removeFromCart, updateCart } from "../../redux/slices/cartSlice";
 import Message from "../../components/Message";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,25 +12,35 @@ import { useGetDeliveryStatusQuery, useGetAllProductsQuery } from "../../redux/q
 import Lottie from "lottie-react";
 import empty from "./empty.json";
 
+/**
+ * UI Redesign (Cart)
+ * - Cleaner card layout, better spacing + alignment
+ * - Sticky summary on desktop
+ * - Better mobile layout
+ * - Keeps your existing logic and API hooks
+ * - Adds trust badges + continue shopping
+ */
+
 function Cart() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const cartItems = useSelector((state) => state.cart.cartItems);
+  const cartItems = useSelector((state) => state.cart.cartItems || []);
   const userInfo = useSelector((state) => state.auth.userInfo);
 
   const { data: deliveryStatus } = useGetDeliveryStatusQuery();
   const { data: products } = useGetAllProductsQuery();
   const { data: userAddress } = useGetAddressQuery(userInfo?._id);
 
-  console.log(deliveryStatus);
   // Remove non-existing products from cart
   useEffect(() => {
     if (products && cartItems.length > 0) {
       const validKeys = new Set([
         // Variant products
         ...products.flatMap((p) =>
-          p.variants.flatMap((v) => v.sizes.map((s) => `${p._id}-${v._id}-${s.size}`))
+          (p.variants || []).flatMap((v) =>
+            (v.sizes || []).map((s) => `${p._id}-${v._id}-${s.size}`),
+          ),
         ),
         // Non-variant products
         ...products.filter((p) => !p.variants?.length).map((p) => `${p._id}-null-null`),
@@ -45,14 +55,24 @@ function Cart() {
     }
   }, [products, cartItems, dispatch]);
 
-  const handleRemove = (item) => {
-    dispatch(removeFromCart(item));
-  };
+  const handleRemove = (item) => dispatch(removeFromCart(item));
 
   const handleChange = (e, item) => {
     const newQty = Number(e.target.value);
     dispatch(updateCart({ ...item, qty: newQty }));
   };
+
+  const shippingFee = Number(deliveryStatus?.[0]?.shippingFee ?? 0);
+  const minOrder = Number(deliveryStatus?.[0]?.minDeliveryCost ?? 0);
+
+  const subTotal = useMemo(() => {
+    return cartItems.reduce(
+      (acc, item) => acc + (item.hasDiscount ? item.discountedPrice : item.price) * item.qty,
+      0,
+    );
+  }, [cartItems]);
+
+  const totalCost = useMemo(() => subTotal + shippingFee, [subTotal, shippingFee]);
 
   const handleGoToPayment = () => {
     if (!userInfo) {
@@ -68,241 +88,262 @@ function Cart() {
     navigate("/payment");
   };
 
-  const subTotal = () => {
-    return cartItems.reduce(
-      (acc, item) => acc + (item.hasDiscount ? item.discountedPrice : item.price) * item.qty,
-      0
-    );
-  };
-
-  const totalCost = () => {
-    const itemsTotal = cartItems.reduce((acc, item) => {
-      const itemPrice = item.hasDiscount ? item.discountedPrice : item.price; // Use discountedPrice only if hasDiscount is true
-      return acc + itemPrice * item.qty;
-    }, 0);
-
-    const deliveryFee = Number(deliveryStatus?.[0]?.shippingFee ?? 0);
-    return itemsTotal + deliveryFee;
-  };
+  const disabledCheckout = cartItems.length === 0 || (minOrder > 0 && totalCost < minOrder);
 
   return (
     <Layout>
-      <div className="px-4 lg:px-52 mt-[100px] lg:mt-32 min-h-screen flex gap-5 lg:gap-10 flex-col lg:flex-row lg:justify-between">
-        {/* Cart Table */}
-        <div className="w-full lg:w-[1000px]">
-          <h1 className="font-bold lg:text-3xl mb-5">Cart</h1>
+      <div className="mx-auto w-full max-w-[1200px] px-4 pt-24 md:pt-28 pb-16">
+        {/* Header */}
+        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-neutral-900">
+              Your Cart
+            </h1>
+            <p className="mt-1 text-sm text-neutral-500">
+              Review your items and proceed to checkout.
+            </p>
+          </div>
+        </div>
 
-          {cartItems?.length === 0 ? (
-            <>
-              <Message dismiss={false}>Your cart is empty</Message>
-              <div className="w-96 mx-auto">
-                <Lottie animationData={empty} loop={true} />
+        {/* Content */}
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_420px] lg:items-start">
+          {/* LEFT: Items */}
+          <div className="space-y-4">
+            {cartItems?.length === 0 ? (
+              <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_18px_60px_rgba(0,0,0,0.06)]">
+                <Message dismiss={false}>Your cart is empty</Message>
+                <div className="mx-auto mt-4 w-full max-w-[360px]">
+                  <Lottie animationData={empty} loop={true} />
+                </div>
               </div>
-            </>
-          ) : (
-            <div className="overflow-x-auto">
-              {/* Desktop / Tablet View */}
-              <table className="hidden min-w-full md:table">
-                <thead>
-                  <tr>
-                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
-                      Product
-                    </th>
-                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
-                      Color/Size
-                    </th>
-                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
-                      Price
-                    </th>
-                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
-                      Quantity
-                    </th>
-                    <th className="px-2 lg:px-4 py-2 border-b text-left text-sm font-extrabold text-gray-600">
-                      Total
-                    </th>
-                    <th className="px-2 lg:px-4 py-2 border-b"></th>
-                  </tr>
-                </thead>
-                <tbody>
+            ) : (
+              <>
+                {/* Desktop table header */}
+                <div className="hidden md:grid grid-cols-[1.2fr_0.7fr_0.45fr_0.55fr_0.5fr_44px] gap-3 px-4 text-xs font-extrabold text-neutral-500">
+                  <div>Product</div>
+                  <div>Color/Size</div>
+                  <div>Price</div>
+                  <div>Qty</div>
+                  <div>Total</div>
+                  <div />
+                </div>
+
+                {/* Items */}
+                <div className="space-y-3">
                   {cartItems.map((item, idx) => {
                     const stock = item.stock ?? 0;
+                    const unitPrice = item.hasDiscount ? item.discountedPrice : item.price;
+                    const rowTotal = unitPrice * item.qty;
+
                     return (
-                      <tr
-                        key={`${item._id}-${item.variantId ?? "null"}-${
-                          item.variantSize ?? "null"
-                        }-${idx}`}
-                        className="hover:bg-zinc-100/40">
-                        {/* Product Image */}
-                        <td className="px-0 lg:px-4 py-10 border-b">
-                          <Link to={`/products/${item._id}`} className="flex items-center gap-2">
+                      <div
+                        key={`${item._id}-${item.variantId ?? "null"}-${item.variantSize ?? "null"}-${idx}`}
+                        className="rounded-3xl border border-neutral-200 bg-white p-3 md:p-4 shadow-[0_18px_60px_rgba(0,0,0,0.06)]">
+                        {/* Desktop row */}
+                        <div className="hidden md:grid grid-cols-[1.2fr_0.7fr_0.45fr_0.55fr_0.5fr_44px] gap-3 items-center">
+                          {/* Product */}
+                          <Link to={`/products/${item._id}`} className="flex items-center gap-3">
                             <img
                               src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
                               alt={item.name}
-                              className="w-16 h-16 lg:w-24 lg:h-24 bg-zinc-100/50 border-2 object-cover rounded-xl"
+                              className="h-20 w-20 rounded-2xl border bg-neutral-50 object-cover"
                             />
-                            <p className="truncate max-w-[100px] md:max-w-[200px]">{item.name}</p>
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-semibold text-neutral-900">
+                                {item.name}
+                              </div>
+                              {item.hasDiscount && (
+                                <div className="mt-1 inline-flex rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-600">
+                                  Sale
+                                </div>
+                              )}
+                            </div>
                           </Link>
-                        </td>
 
-                        <td className="px-2 lg:px-4 py-2 border-b text-sm">
-                          {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
-                        </td>
+                          {/* Color/Size */}
+                          <div className="text-sm text-neutral-700">
+                            {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
+                          </div>
 
-                        <td className="lg:px-4 py-2 border-b text-sm">
-                          {item.hasDiscount ? (
-                            <span>{item.discountedPrice.toFixed(3)} KD</span>
-                          ) : (
-                            <span>{item.price.toFixed(3)} KD</span>
-                          )}
-                        </td>
+                          {/* Price */}
+                          <div className="text-sm font-semibold text-neutral-900">
+                            {unitPrice.toFixed(3)} KD
+                          </div>
 
-                        <td className="lg:px-4 py-2 border-b">
-                          <select
-                            value={item.qty}
-                            onChange={(e) => handleChange(e, item)}
-                            disabled={stock === 0}
-                            className="border bg-zinc-100/50 lg:w-[100px] p-2 rounded focus:border-blue-500">
-                            {[...Array(stock).keys()].map((x) => (
-                              <option key={x + 1} value={x + 1}>
-                                {x + 1}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
+                          {/* Qty */}
+                          <div>
+                            <select
+                              value={item.qty}
+                              onChange={(e) => handleChange(e, item)}
+                              disabled={stock === 0}
+                              className="w-[110px] rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-semibold text-neutral-900 outline-none focus:border-neutral-400">
+                              {[...Array(stock).keys()].map((x) => (
+                                <option key={x + 1} value={x + 1}>
+                                  {x + 1}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
 
-                        <td className="py-2 border-b text-sm">
-                          {item.hasDiscount
-                            ? (item.discountedPrice * item.qty).toFixed(3)
-                            : (item.price * item.qty).toFixed(3)}{" "}
-                          KD
-                        </td>
+                          {/* Total */}
+                          <div className="text-sm font-extrabold text-neutral-900">
+                            {rowTotal.toFixed(3)} KD
+                          </div>
 
-                        <td className="lg:px-4 py-2 border-b">
+                          {/* Remove */}
                           <button
                             onClick={() => handleRemove(item)}
-                            className="text-black hover:bg-red-100 p-2 transition-all duration-300  hover:text-red-500 rounded-lg">
-                            <Trash2 strokeWidth={2} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              {/* Mobile View */}
-              <div className="md:hidden space-y-2">
-                {cartItems.map((item, idx) => {
-                  const stock = item.stock ?? 0;
-                  return (
-                    <div
-                      key={`${item._id}-${item.variantId ?? "null"}-${
-                        item.variantSize ?? "null"
-                      }-${idx}`}
-                      className="border p-3 rounded-xl bg-white shadow-sm flex gap-3">
-                      <img
-                        src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
-                        alt={item.name}
-                        className="w-28 h-28 object-cover rounded-lg border bg-zinc-100"
-                      />
-
-                      <div className="flex-1 space-y-1 text-sm">
-                        <p className="font-semibold break-words">{item.name}</p>
-                        <p className="text-gray-600">
-                          Color/Size: {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
-                        </p>
-                        <p className="text-gray-600">
-                          Price:{" "}
-                          {item.hasDiscount
-                            ? item.discountedPrice.toFixed(3)
-                            : item.price.toFixed(3)}{" "}
-                          KD
-                        </p>
-
-                        <div className="flex items-center justify-between mt-2">
-                          <select
-                            value={item.qty}
-                            onChange={(e) => handleChange(e, item)}
-                            disabled={stock === 0}
-                            className="border bg-zinc-100/50 p-1 rounded focus:border-blue-500">
-                            {[...Array(stock).keys()].map((x) => (
-                              <option key={x + 1} value={x + 1}>
-                                {x + 1}
-                              </option>
-                            ))}
-                          </select>
-
-                          <p className="font-bold">
-                            {item.hasDiscount
-                              ? (item.discountedPrice * item.qty).toFixed(3)
-                              : (item.price * item.qty).toFixed(3)}{" "}
-                            KD
-                          </p>
-
-                          <button
-                            onClick={() => handleRemove(item)}
-                            className="text-black p-2 transition-all duration-300 hover:bg-red-100 hover:border-red-200 hover:text-red-500 rounded-lg">
-                            <Trash2 strokeWidth={2} />
+                            className="grid h-10 w-10 place-items-center rounded-2xl border border-neutral-200 bg-white text-neutral-900 hover:bg-rose-50 hover:text-rose-600"
+                            aria-label="Remove">
+                            <Trash2 className="h-5 w-5" />
                           </button>
                         </div>
+
+                        {/* Mobile row */}
+                        <div className="md:hidden flex gap-3">
+                          <img
+                            src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
+                            alt={item.name}
+                            className="h-28 w-28 rounded-2xl border bg-neutral-50 object-cover"
+                          />
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <Link to={`/products/${item._id}`} className="min-w-0">
+                                <div className="truncate text-sm font-semibold text-neutral-900">
+                                  {item.name}
+                                </div>
+                                <div className="mt-1 text-xs text-neutral-500">
+                                  {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
+                                </div>
+                              </Link>
+
+                              <button
+                                onClick={() => handleRemove(item)}
+                                className="grid h-9 w-9 place-items-center rounded-2xl border border-neutral-200 bg-white text-neutral-900 hover:bg-rose-50 hover:text-rose-600"
+                                aria-label="Remove">
+                                <Trash2 className="h-5 w-5" />
+                              </button>
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-between">
+                              <div className="text-sm font-semibold text-neutral-900">
+                                {unitPrice.toFixed(3)} KD
+                                {item.hasDiscount && (
+                                  <span className="ml-2 rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-600">
+                                    Sale
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm font-extrabold text-neutral-900">
+                                {rowTotal.toFixed(3)} KD
+                              </div>
+                            </div>
+
+                            <div className="mt-3">
+                              <select
+                                value={item.qty}
+                                onChange={(e) => handleChange(e, item)}
+                                disabled={stock === 0}
+                                className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-semibold text-neutral-900 outline-none focus:border-neutral-400">
+                                {[...Array(stock).keys()].map((x) => (
+                                  <option key={x + 1} value={x + 1}>
+                                    {x + 1}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Cart Summary */}
-        <div className=" lg:w-[600px]  lg:px-20">
-          <h1 className="font-bold lg:text-3xl mb-5">Summary</h1>
-          <div className="w-full border border-gray-500/20 mb-5"></div>
-
-          <div className="flex flex-col gap-2 lg:gap-5">
-            <div className="flex justify-between">
-              <p>Subtotal:</p>
-              <p>{subTotal().toFixed(3)} KD</p>
-            </div>
-
-            <div className="flex justify-between">
-              <p className="flex gap-2">
-                Delivery: <Truck strokeWidth={1} />
-              </p>
-              <p>{deliveryStatus?.[0]?.shippingFee?.toFixed(3) ?? "Free"} KD</p>
-            </div>
-
-            <div className="flex justify-between">
-              <p>Expected delivery:</p>
-              <p className="uppercase">{deliveryStatus?.[0]?.timeToDeliver}</p>
-            </div>
-
-            <div className="w-full border border-gray-500/20 mb-2"></div>
-
-            <div className="flex justify-between">
-              <p>Total:</p>
-              <p>{totalCost().toFixed(3)} KD</p>
-            </div>
-
-            {cartItems.length > 0 && totalCost() < deliveryStatus?.[0]?.minDeliveryCost && (
-              <div className="p-3 bg-rose-50 rounded-lg text-rose-500 border border-rose-500 font-bold">
-                Minimum order: {deliveryStatus?.[0]?.minDeliveryCost?.toFixed(3)} KD
-              </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
+          </div>
 
-            <button
-              onClick={handleGoToPayment}
-              disabled={
-                cartItems.length === 0 || totalCost() < deliveryStatus?.[0]?.minDeliveryCost
-              }
-              className={clsx(
-                " bg-gradient-to-t mt-5 mb-10 text-white p-3 rounded-lg w-full font-bold",
-                cartItems.length === 0 || totalCost() < deliveryStatus?.[0]?.minDeliveryCost
-                  ? "from-zinc-300 to-zinc-200 border"
-                  : "from-zinc-900 to-zinc-700  shadow-[0_7px_15px_rgba(0,0,0,0.5)] hover:scale-[0.995]"
-              )}>
-              Go to payment
-            </button>
+          {/* RIGHT: Summary */}
+          <div className="lg:sticky lg:top-24">
+            <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-[0_18px_60px_rgba(0,0,0,0.06)]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-extrabold text-neutral-900">Order summary</h2>
+                  <p className="mt-1 text-sm text-neutral-500">
+                    Shipping & totals calculated at checkout.
+                  </p>
+                </div>
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-neutral-950 text-white">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-600">Subtotal</span>
+                  <span className="font-semibold text-neutral-900">{subTotal.toFixed(3)} KD</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-2 text-neutral-600">
+                    Delivery <Truck className="h-4 w-4" />
+                  </span>
+                  <span className="font-semibold text-neutral-900">
+                    {(deliveryStatus?.[0]?.shippingFee ?? 0).toFixed?.(3) ?? "0.000"} KD
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-600">Expected delivery</span>
+                  <span className="font-semibold text-neutral-900 uppercase">
+                    {deliveryStatus?.[0]?.timeToDeliver ?? "-"}
+                  </span>
+                </div>
+
+                <div className="my-3 h-px w-full bg-neutral-200" />
+
+                <div className="flex items-center justify-between">
+                  <span className="text-neutral-700 font-semibold">Total</span>
+                  <span className="text-lg font-extrabold text-neutral-900">
+                    {totalCost.toFixed(3)} KD
+                  </span>
+                </div>
+
+                {cartItems.length > 0 && minOrder > 0 && totalCost < minOrder && (
+                  <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-rose-700">
+                    <div className="text-sm font-extrabold">Minimum order required</div>
+                    <div className="mt-1 text-sm">
+                      Minimum order:{" "}
+                      <span className="font-extrabold">{minOrder.toFixed(3)} KD</span>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleGoToPayment}
+                  disabled={disabledCheckout}
+                  className={clsx(
+                    "mt-5 w-full rounded-2xl px-4 py-3 text-sm font-extrabold transition",
+                    disabledCheckout
+                      ? "bg-neutral-200 text-neutral-500 cursor-not-allowed"
+                      : "bg-neutral-950 text-white shadow-[0_16px_40px_rgba(0,0,0,0.25)] hover:opacity-95",
+                  )}>
+                  Go to payment
+                </button>
+
+                <Link
+                  to="/all-products"
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-extrabold text-neutral-900 hover:bg-neutral-50">
+                  Continue shopping <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Optional note */}
+            <div className="mt-4 rounded-3xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600 shadow-[0_18px_60px_rgba(0,0,0,0.06)]">
+              Tip: Add your address in{" "}
+              <span className="font-semibold text-neutral-900">Profile</span> to speed up checkout.
+            </div>
           </div>
         </div>
       </div>
