@@ -180,7 +180,7 @@ function Profile() {
 
   return (
     <Layout>
-      <div className="relative overflow-x-hidden">
+      <div className="relative overflow-x-hidden bg-gray-100">
         {/* Background */}
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-gradient-to-b from-white via-neutral-50 to-white" />
@@ -190,7 +190,7 @@ function Profile() {
 
         <motion.div
           transition={{ duration: 0.6 }}
-          className="min-h-screen lg:container lg:mx-auto mt-[70px] lg:mt-[110px] px-3 pb-16">
+          className="min-h-screen max-w-6xl   lg:mx-auto mt-[70px] lg:mt-[110px] px-3 pb-16">
           {/* Top bar */}
           <div className="flex items-center justify-between">
             <button

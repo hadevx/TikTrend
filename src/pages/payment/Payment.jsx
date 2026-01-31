@@ -37,7 +37,7 @@ function Payment() {
   const subTotal = () => {
     return cartItems.reduce(
       (acc, item) => acc + (item.hasDiscount ? item.discountedPrice : item.price) * item.qty,
-      0
+      0,
     );
   };
   const totalCost = () => {
@@ -52,7 +52,7 @@ function Payment() {
   return (
     <Layout>
       <div className="min-h-screen lg:mt-[100px]">
-        <div className="flex mt-[70px] flex-col-reverse py-10 lg:flex-row gap-5 lg:gap-10 px-5 lg:px-60 lg:mt-5">
+        <div className="flex mt-[70px] flex-col-reverse py-10 lg:flex-row gap-5 lg:gap-10 px-2 lg:px-60 lg:mt-5">
           <div className="flex lg:w-[50%] gap-5 flex-col">
             <div className="flex bg-white shadow transition-all duration-300 flex-col gap-5 border  p-7   rounded-lg">
               <h1 className="font-extrabold text-lg ">Shipping Address</h1>
@@ -90,7 +90,7 @@ function Payment() {
                     "flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-200",
                     paymentMethod === "cash"
                       ? "border-indigo-600 bg-indigo-50 shadow"
-                      : "border-gray-300 hover:border-gray-400"
+                      : "border-gray-300 hover:border-gray-400",
                   )}>
                   <input
                     type="radio"
@@ -110,7 +110,7 @@ function Payment() {
                     "flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-200",
                     paymentMethod === "paypal"
                       ? "border-indigo-600 bg-indigo-50 shadow"
-                      : "border-gray-300 hover:border-gray-400"
+                      : "border-gray-300 hover:border-gray-400",
                   )}>
                   <input
                     type="radio"
@@ -149,13 +149,13 @@ function Payment() {
                     "w-full mt-5 py-4 flex justify-center  font-bold transition-all duration-300 shadow",
                     loadingCreateOrder || loadingCheck
                       ? "bg-gray-300 text-black"
-                      : "bg-zinc-900 hover:bg-zinc-700 text-white  transition-all duration-300"
+                      : "bg-zinc-900 hover:bg-zinc-700 text-white  transition-all duration-300",
                   )}>
                   {loadingCheck
                     ? "Checking stock..."
                     : loadingCreateOrder
-                    ? "Placing order..."
-                    : "Place Order"}
+                      ? "Placing order..."
+                      : "Place Order"}
                 </button>
               )}
             </div>
