@@ -67,11 +67,6 @@ function Login() {
             <div>
               <div className="mb-1 flex items-center justify-between">
                 <label className="text-sm text-zinc-700">Password</label>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm underline underline-offset-4 text-zinc-600 hover:text-zinc-900">
-                  Forgot?
-                </Link>
               </div>
 
               <div className="relative">
