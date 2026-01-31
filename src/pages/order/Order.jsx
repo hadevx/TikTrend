@@ -162,7 +162,7 @@ const Order = () => {
                 </h2>
               </div>
 
-              <span className="px-3 py-1 rounded-full text-xs font-medium">
+              {/*   <span className="px-3 py-1 rounded-full text-xs font-medium">
                 {order?.isDelivered ? (
                   <Badge variant="success">
                     Delivered on {order?.deliveredAt?.substring(0, 10)}
@@ -172,7 +172,7 @@ const Order = () => {
                 ) : (
                   <Badge variant="pending">Processing</Badge>
                 )}
-              </span>
+              </span> */}
             </div>
 
             <div className="mb-6">

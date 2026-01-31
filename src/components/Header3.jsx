@@ -1,11 +1,4 @@
-import {
-  ShoppingCart,
-  Menu,
-  X,
-  Search as SearchIcon,
-  User as UserIconSvg,
-  ChevronDown,
-} from "lucide-react";
+import { ShoppingCart, Menu, X, User as UserIconSvg, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -85,6 +78,7 @@ export default function Header({ onSearch }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // optional: keep English category names as-is (or translate with a map)
   const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 
   // Desktop mega menu rendering
@@ -157,6 +151,7 @@ export default function Header({ onSearch }) {
   return (
     <>
       <motion.header
+        dir="rtl"
         className={clsx(
           "fixed top-0 left-0 right-0 z-50 px-5 py-2 sm:py-0",
           "transition-all duration-300",
@@ -174,15 +169,17 @@ export default function Header({ onSearch }) {
         )}
 
         <div className="container-custom h-14 md:h-16 flex items-center justify-between px-2 md:px-10">
-          {/* Left: Logo */}
+          {/* Right (RTL): Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-base md:text-lg font-semibold tracking-tight">WebSchema</span>
+            <span className="text-base md:text-lg font-semibold tracking-tight">
+              متجر خليها على الله
+            </span>
           </Link>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-7">
             <Link to="/" className="text-sm font-medium hover:opacity-70">
-              Home
+              الرئيسية
             </Link>
 
             {/* Categories mega */}
@@ -191,7 +188,7 @@ export default function Header({ onSearch }) {
                 type="button"
                 onClick={() => setExpandedCategoryId((p) => (p === "all" ? null : "all"))}
                 className="text-sm font-medium hover:opacity-70 inline-flex items-center gap-1">
-                Categories
+                الأقسام
                 <ChevronDown
                   size={16}
                   className={clsx(
@@ -208,22 +205,20 @@ export default function Header({ onSearch }) {
                     animate={{ opacity: 1, y: 12, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.98 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute left-0 top-full w-[760px] rounded-3xl border border-neutral-200 bg-white shadow-2xl overflow-hidden">
+                    className="absolute right-0 top-full w-[760px] rounded-3xl border border-neutral-200 bg-white shadow-2xl overflow-hidden">
                     <div className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-semibold text-neutral-900">
-                            Browse categories
-                          </p>
+                          <p className="text-sm font-semibold text-neutral-900">تصفّح الأقسام</p>
                           <p className="text-xs text-neutral-500 mt-1">
-                            Explore collections curated for you.
+                            استكشف مجموعات مختارة بعناية لك.
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setExpandedCategoryId(null)}
                           className="rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold hover:bg-neutral-50">
-                          Close
+                          إغلاق
                         </button>
                       </div>
 
@@ -234,13 +229,13 @@ export default function Header({ onSearch }) {
 
                     <div className="border-t border-neutral-200 px-6 py-4 flex items-center justify-between">
                       <span className="text-xs text-neutral-500">
-                        Tip: Use search to find items fast
+                        نصيحة: استخدم البحث للوصول السريع
                       </span>
                       <Link
                         to="/all-products"
                         onClick={() => setExpandedCategoryId(null)}
                         className="text-xs font-semibold text-neutral-900 hover:opacity-70">
-                        View all products →
+                        عرض جميع المنتجات ←
                       </Link>
                     </div>
                   </motion.div>
@@ -249,10 +244,10 @@ export default function Header({ onSearch }) {
             </div>
 
             <Link to="/about" className="text-sm font-medium hover:opacity-70">
-              About
+              من نحن
             </Link>
             <Link to="/contact" className="text-sm font-medium hover:opacity-70">
-              Contact
+              تواصل معنا
             </Link>
           </nav>
 
@@ -280,7 +275,7 @@ export default function Header({ onSearch }) {
                     ? "bg-white text-neutral-900 hover:bg-white/90"
                     : "bg-neutral-950 text-white hover:bg-neutral-900",
                 )}>
-                Login
+                تسجيل الدخول
               </Link>
             )}
 
@@ -293,10 +288,11 @@ export default function Header({ onSearch }) {
                   ? "border-white/20 bg-white/10 text-white hover:bg-white/15"
                   : "border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50",
               )}
-              aria-label="Cart">
+              aria-label="السلة"
+              title="السلة">
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-rose-500 text-white text-xs font-bold grid place-items-center">
+                <span className="absolute -top-2 -left-2 h-5 min-w-[20px] px-1 rounded-full bg-rose-500 text-white text-xs font-bold grid place-items-center">
                   {cartCount}
                 </span>
               )}
@@ -312,10 +308,12 @@ export default function Header({ onSearch }) {
                 pathname === "/" && !isScrolled
                   ? "border-white/20 bg-white/10 text-white"
                   : "border-neutral-200 bg-white text-neutral-900",
-              )}>
+              )}
+              aria-label="السلة"
+              title="السلة">
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-rose-500 text-white text-xs font-bold grid place-items-center">
+                <span className="absolute -top-2 -left-2 h-5 min-w-[20px] px-1 rounded-full bg-rose-500 text-white text-xs font-bold grid place-items-center">
                   {cartCount}
                 </span>
               )}
@@ -329,13 +327,10 @@ export default function Header({ onSearch }) {
                 "bg-black text-white shadow-[0_1px_15px_rgba(0,0,0,0.5)] border-white/20 hover:border-white/30",
                 "active:scale-[0.98]",
               )}
-              aria-label="Menu">
-              {/* Red / orange dot */}
+              aria-label="القائمة"
+              title="القائمة">
               <span className="h-2 w-2 rounded-full bg-gradient-to-br from-red-500 to-orange-400" />
-              {/* Menu text */}
-              <span className="text-sm font-medium">Menu</span>
-
-              {/* Icon */}
+              <span className="text-sm font-medium">القائمة</span>
               {clicked ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
@@ -363,24 +358,24 @@ export default function Header({ onSearch }) {
                 className="absolute left-0 top-0 h-full w-[86%] max-w-[360px] bg-neutral-950 text-white shadow-2xl">
                 <div className="p-5 border-b border-white/10 flex items-center justify-between">
                   <Link to="/" onClick={() => setClicked(false)} className="font-semibold">
-                    WebSchema
+                    ويب سكيمة
                   </Link>
                   <button
                     type="button"
                     onClick={() => setClicked(false)}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 hover:bg-white/10"
-                    aria-label="Close">
+                    aria-label="إغلاق"
+                    title="إغلاق">
                     <X className="h-5 w-5" />
                   </button>
                 </div>
 
                 <div className="p-5 space-y-4">
-                  {/* Links */}
                   <Link
                     to="/"
                     onClick={() => setClicked(false)}
                     className="block rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold hover:bg-white/10">
-                    Home
+                    الرئيسية
                   </Link>
 
                   {/* Categories accordion */}
@@ -389,7 +384,7 @@ export default function Header({ onSearch }) {
                       type="button"
                       onClick={() => setExpandedMobileCat((p) => (p === "all" ? null : "all"))}
                       className="w-full px-4 py-3 flex items-center justify-between text-sm font-semibold">
-                      Categories
+                      الأقسام
                       <ChevronDown
                         size={18}
                         className={clsx(
@@ -418,13 +413,14 @@ export default function Header({ onSearch }) {
                     to="/about"
                     onClick={() => setClicked(false)}
                     className="block rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold hover:bg-white/10">
-                    About
+                    من نحن
                   </Link>
+
                   <Link
                     to="/contact"
                     onClick={() => setClicked(false)}
                     className="block rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold hover:bg-white/10">
-                    Contact
+                    تواصل معنا
                   </Link>
 
                   {/* User */}
@@ -434,19 +430,19 @@ export default function Header({ onSearch }) {
                       onClick={() => setClicked(false)}
                       className="mt-2 inline-flex w-full items-center gap-2 rounded-2xl bg-white text-neutral-900 px-4 py-3 text-sm font-semibold hover:bg-white/90">
                       <UserIconSvg className="h-4 w-4" />
-                      My account
+                      حسابي
                     </Link>
                   ) : (
                     <Link
                       to="/login"
                       onClick={() => setClicked(false)}
                       className="mt-2 inline-flex w-full items-center justify-center rounded-2xl bg-white text-neutral-900 px-4 py-3 text-sm font-semibold hover:bg-white/90">
-                      Login
+                      تسجيل الدخول
                     </Link>
                   )}
 
                   <div className="pt-4 text-center text-xs text-white/50">
-                    © {new Date().getFullYear()} WebSchema
+                    © {new Date().getFullYear()} ويب سكيمة
                   </div>
                 </div>
               </motion.nav>
