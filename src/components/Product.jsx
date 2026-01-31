@@ -16,6 +16,9 @@ function Product({ product }) {
   const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0] || null);
   const [selectedSize, setSelectedSize] = useState(product.variants?.[0]?.sizes?.[0]?.size || "");
 
+  // ✅ temporary UI state (shows "Added" then back to "Add to cart")
+  const [justAdded, setJustAdded] = useState(false);
+
   const stock = selectedVariant
     ? selectedVariant.sizes?.find((s) => s.size === selectedSize)?.stock
     : product?.countInStock;
@@ -53,12 +56,9 @@ function Product({ product }) {
       }),
     );
 
-    toast.success(
-      `${product.name}${
-        selectedVariant && selectedSize ? ` (${selectedVariant.color}, ${selectedSize})` : ""
-      } added to cart`,
-      { position: "top-center" },
-    );
+    // ✅ NO success toast — only change button text temporarily
+    setJustAdded(true);
+    window.setTimeout(() => setJustAdded(false), 1200);
   };
 
   return (
@@ -108,7 +108,7 @@ function Product({ product }) {
 
         {/* Title + Price */}
         <div className="mt-1 flex items-start justify-between gap-3">
-          <h2 className="min-w-0 flex-1 text-sm sm:text-base font-semibold text-neutral-900 line-clamp-2">
+          <h2 className="min-w-0 flex-1 text-sm sm:text-base truncate  font-semibold text-neutral-900 line-clamp-2">
             {product?.name}
           </h2>
 
@@ -207,10 +207,21 @@ function Product({ product }) {
               "w-full rounded-2xl px-4 py-3 text-sm font-semibold transition flex items-center justify-center gap-2",
               stock === 0
                 ? "bg-neutral-200 text-neutral-500 cursor-not-allowed"
-                : "bg-neutral-900 text-white hover:bg-neutral-800 active:scale-[0.99]",
+                : justAdded
+                  ? "bg-emerald-600 text-white"
+                  : "bg-neutral-900 text-white hover:bg-neutral-800 active:scale-[0.99]",
             )}>
-            <ShoppingCart className="h-5 w-5" />
-            <span>{stock === 0 ? "Out of stock" : "Add to cart"}</span>
+            {justAdded ? (
+              <>
+                <Check className="h-5 w-5" />
+                <span>Added</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="h-5 w-5" />
+                <span>{stock === 0 ? "Out of stock" : "Add to cart"}</span>
+              </>
+            )}
           </button>
         </div>
       </div>

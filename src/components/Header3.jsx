@@ -275,7 +275,7 @@ export default function Header({ onSearch }) {
               <Link
                 to="/login"
                 className={clsx(
-                  "rounded-2xl px-4 py-2 text-sm font-semibold transition",
+                  "rounded-lg px-4 py-2 text-sm font-semibold transition",
                   pathname === "/" && !isScrolled
                     ? "bg-white text-neutral-900 hover:bg-white/90"
                     : "bg-neutral-950 text-white hover:bg-neutral-900",
