@@ -47,8 +47,8 @@ function Home() {
       {/* <HeroSection3 /> */}
       {/* <HeroSection5 /> */}
       {/* <HeroSection6 /> */}
-      {/* <HeroSection7 /> */}
-      <HeroSection8 />
+      <HeroSection7 />
+      {/* <HeroSection8 /> */}
       <FeaturedProducts products={products} isLoading={isLoading} />
       <CollectionStrip />
       {/* <MaterialsSection /> */}

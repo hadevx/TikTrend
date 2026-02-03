@@ -64,7 +64,7 @@ function Product({ product }) {
   return (
     <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition-all duration-300 ">
       {/* Image */}
-      <Link to={`/products/${product._id}`} className="relative block">
+      <Link to={`/product/${product._id}`} className="relative block">
         <div className="relative aspect-[4/5] overflow-hidden">
           {/* shine */}
           <div className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.18),transparent_55%)]" />

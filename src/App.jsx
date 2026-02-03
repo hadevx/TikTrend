@@ -31,7 +31,7 @@ function App() {
       <Route path="/login" element={!userInfo ? <Login /> : <Navigate to="/" />} />
       <Route path="/register" element={!userInfo ? <Register /> : <Navigate to="/" />} />
       <Route path="/" element={<Home />} />
-      <Route path="/products/:productId" element={<Product />} />
+      <Route path="/product/:productId" element={<Product />} />
       <Route path="/all-products" element={<AllProducts />} />
       <Route path="/category/:id" element={<ProductByCategory />} />
       <Route path="/payment/callback" element={<PaymentCallback />} /> {/* Add this */}
