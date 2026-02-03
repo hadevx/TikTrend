@@ -3,55 +3,17 @@ import React, { useMemo, useState } from "react";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
-      <SiteNav />
+      {/* <SiteNav /> */}
       <ClothingHero />
-      <FeaturedStrip />
-      <CategoryShowcase />
-      <BestSellers />
-      <ValueProps />
-      <Testimonials />
-      <FAQ />
-      <Newsletter />
-      <SiteFooter />
+      {/* <FeaturedStrip /> */}
+      {/* <CategoryShowcase /> */}
+      {/* <BestSellers /> */}
+      {/* <ValueProps /> */}
+      {/* <Testimonials /> */}
+      {/* <FAQ /> */}
+      {/* <Newsletter /> */}
+      {/* <SiteFooter /> */}
     </div>
-  );
-}
-
-/* ----------------------------- NAV ----------------------------- */
-
-function SiteNav() {
-  const links = ["New", "Outerwear", "Hoodies", "Tees", "Accessories"];
-  return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-neutral-950/60 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10">
-            <span className="font-mono text-xs tracking-[0.35em] text-white/80">AW</span>
-          </div>
-          <div>
-            <div className="text-sm font-semibold tracking-tight">ARC.WEAR</div>
-            <div className="text-xs text-white/55">Minimal performance essentials</div>
-          </div>
-        </div>
-
-        <nav className="hidden items-center gap-6 lg:flex">
-          {links.map((l) => (
-            <a key={l} href="#" className="text-sm text-white/70 hover:text-white transition">
-              {l}
-            </a>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <button className="hidden rounded-2xl bg-white/5 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/10 hover:bg-white/10 lg:inline-flex">
-            Search
-          </button>
-          <button className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-neutral-950 shadow-[0_18px_60px_rgba(0,0,0,0.55)]">
-            Sign in
-          </button>
-        </div>
-      </div>
-    </header>
   );
 }
 
@@ -121,13 +83,23 @@ function ClothingHero() {
             </button>
             <div className="ml-0 flex items-center gap-2 sm:ml-2">
               <div className="flex -space-x-2">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-8 w-8 rounded-full bg-white/10 ring-2 ring-neutral-950"
+                {[
+                  "https://i.pravatar.cc/80?img=12",
+                  "https://i.pravatar.cc/80?img=32",
+                  "https://i.pravatar.cc/80?img=56",
+                ].map((src, i) => (
+                  <img
+                    key={src}
+                    src={src}
+                    alt={`Customer avatar ${i + 1}`}
+                    className="h-8 w-8 rounded-full object-cover ring-2 ring-neutral-950"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    draggable={false}
                   />
                 ))}
               </div>
+
               <div className="text-xs text-white/65">
                 Loved by <span className="text-white/85">12,000+</span> customers
               </div>
@@ -137,7 +109,7 @@ function ClothingHero() {
           {/* Quick info */}
           <div className="mt-10 grid max-w-xl grid-cols-1 gap-3 sm:grid-cols-3">
             <SelectPill label="Category" value="Outerwear" />
-            <SelectPill label="Shipping" value="Free over $75" />
+            <SelectPill label="Shipping" value="Free over  15 KD" />
             <SelectPill label="Returns" value="30 days" />
           </div>
         </div>
@@ -247,7 +219,7 @@ function ClothingHero() {
               <div className="absolute left-5 top-5 rounded-2xl bg-black/25 px-4 py-3 backdrop-blur-xl ring-1 ring-white/10">
                 <div className="text-xs text-white/75">Featured</div>
                 <div className="mt-1 text-sm font-semibold">Arc Shell Jacket</div>
-                <div className="mt-1 text-xs text-white/70">$148 • Water-repellent</div>
+                <div className="mt-1 text-xs text-white/70">Water-repellent</div>
               </div>
             </div>
           </div>
@@ -359,7 +331,7 @@ function ClothingHero() {
 
           {/* Brand mark */}
           <div className="absolute bottom-8 left-10 select-none font-mono text-sm tracking-[0.35em] text-white/55">
-            ARC.WEAR
+            WEBSCHEMA
           </div>
         </div>
       </div>

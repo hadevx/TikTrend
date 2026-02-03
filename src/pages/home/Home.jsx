@@ -25,7 +25,7 @@ import HeroSection5 from "../../components/HeroSection5";
 import HeroSection6 from "../../components/HeroSection6";
 import HeroSection7 from "../../components/HeroSection7";
 import HeroSection8 from "../../components/HeroSection8";
-
+import Test from "../../components/Test.jsx";
 function Home() {
   const { data: products, isLoading, refetch } = useGetLatestProductsQuery();
 
@@ -42,12 +42,13 @@ function Home() {
 
   return (
     <Layout>
+      {/* <Test /> */}
       {/* <HeroSection /> */}
       {/* <HeroSection2 /> */}
-      {/* <HeroSection3 /> */}
+      <HeroSection3 />
       {/* <HeroSection5 /> */}
       {/* <HeroSection6 /> */}
-      <HeroSection7 />
+      {/* <HeroSection7 /> */}
       {/* <HeroSection8 /> */}
       <FeaturedProducts products={products} isLoading={isLoading} />
       <CollectionStrip />
