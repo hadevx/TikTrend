@@ -26,6 +26,11 @@ import HeroSection6 from "../../components/HeroSection6";
 import HeroSection7 from "../../components/HeroSection7";
 import HeroSection8 from "../../components/HeroSection8";
 import Test from "../../components/Test.jsx";
+import Test2 from "../../components/Test2.jsx";
+import Test3 from "../../components/Test3.jsx";
+import Luxery from "../../components/Luxery.jsx";
+import SmoothScroll from "../../components/SmoothScroll";
+import { HeritageSection } from "../../components/Heritage.jsx";
 function Home() {
   const { data: products, isLoading, refetch } = useGetLatestProductsQuery();
 
@@ -42,16 +47,22 @@ function Home() {
 
   return (
     <Layout>
-      {/* <Test /> */}
-      {/* <HeroSection /> */}
-      {/* <HeroSection2 /> */}
-      <HeroSection3 />
-      {/* <HeroSection5 /> */}
-      {/* <HeroSection6 /> */}
-      {/* <HeroSection7 /> */}
-      {/* <HeroSection8 /> */}
-      <FeaturedProducts products={products} isLoading={isLoading} />
-      <CollectionStrip />
+      <SmoothScroll>
+        <Luxery />
+        {/* <Test3 /> */}
+        {/* <Test /> */}
+        {/* <Test2 /> */}
+        {/* <HeroSection /> */}
+        {/* <HeroSection2 /> */}
+        {/* <HeroSection3 /> */}
+        {/* <HeroSection5 /> */}
+        {/* <HeroSection6 /> */}
+        {/* <HeroSection7 /> */}
+        {/* <HeroSection8 /> */}
+        <FeaturedProducts products={products} isLoading={isLoading} />
+        <CollectionStrip />
+        <HeritageSection />
+      </SmoothScroll>
       {/* <MaterialsSection /> */}
       {/* <X /> */}
       {/* <Y /> */}

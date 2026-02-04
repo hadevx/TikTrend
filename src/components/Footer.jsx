@@ -67,7 +67,7 @@ export default function Footer() {
           }}
         />
 
-        <div className="relative mx-auto max-w-6xl px-6 py-10">
+        <div className="relative mx-auto max-w-6xl px-6 py-20">
           <div className="grid gap-8 md:grid-cols-12">
             {/* Brand */}
             <div className="md:col-span-4">
