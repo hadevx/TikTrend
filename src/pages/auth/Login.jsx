@@ -23,6 +23,25 @@ function Login() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ✅ Device helpers (no extra libs)
+  const getDeviceInfo = () => {
+    const ua = navigator.userAgent || "";
+    const platform = navigator?.userAgentData?.platform || navigator.platform || "";
+    const language = navigator.language || "";
+    const screenSize =
+      typeof window !== "undefined" ? `${window.screen.width}x${window.screen.height}` : "";
+    const timezone =
+      typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "";
+
+    return {
+      userAgent: ua,
+      platform,
+      language,
+      screen: screenSize,
+      timezone,
+    };
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -33,7 +52,15 @@ function Login() {
       const result = loginUserSchema.safeParse({ email, password });
       if (!result.success) return toast.error(result.error.issues[0].message);
 
-      const res = await loginUser({ email, password }).unwrap();
+      // ✅ Send device info to backend
+      const deviceInfo = getDeviceInfo();
+
+      const res = await loginUser({
+        email,
+        password,
+        deviceInfo, // 👈 backend should save this + lastLoginAt
+      }).unwrap();
+
       dispatch(setUserInfo({ ...res }));
       navigate("/");
     } catch (error) {

@@ -8,17 +8,15 @@ import Payment from "./pages/payment/Payment";
 import PrivateRoute from "./components/PrivateRoute";
 import Product from "./pages/product/Product";
 import Profile from "./pages/user/Profile";
-import Address from "./pages/address/Address";
 import Order from "./pages/order/Order";
 import ProductByCategory from "./pages/productByCategory/ProductByCategory";
-import { useGetStoreStatusQuery } from "./redux/queries/maintenanceApi";
-import Maintenance from "./components/Maintenance";
 import PaymentCallback from "./pages/payment/PaymentCallback";
 import AllProducts from "./pages/product/AllProducts";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import About from "./pages/about/About";
 import Contact from "./pages/contact/Contact";
+import SaleProducts from "./pages/product/SaleProducts";
 
 function App() {
   const userInfo = useSelector((state) => state.auth.userInfo);
@@ -33,12 +31,13 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/product/:productId" element={<Product />} />
       <Route path="/all-products" element={<AllProducts />} />
+      <Route path="/sale" element={<SaleProducts />} />
+      {/* <Route path="/category/:id" element={<ProductByCategory />} /> */}
       <Route path="/category/:id" element={<ProductByCategory />} />
       <Route path="/payment/callback" element={<PaymentCallback />} /> {/* Add this */}
       <Route path="/cart" element={<Cart />} />
       <Route path="/payment" element={<PrivateRoute element={<Payment />} />} />
       <Route path="/order/:orderId" element={<PrivateRoute element={<Order />} />} />
-      <Route path="/address" element={<PrivateRoute element={<Address />} />} />
       <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />

@@ -1,79 +1,131 @@
+// src/pages/AllProducts/AllProducts.jsx
 import Layout from "../../Layout";
 import { motion } from "framer-motion";
 import { useGetProductsQuery, useGetCategoriesTreeQuery } from "../../redux/queries/productApi";
 import Product from "../../components/Product";
 import Loader from "../../components/Loader";
 import Pagination from "../../components/Paginations";
-import clsx from "clsx";
 import { useEffect, useMemo, useState } from "react";
-import { Search, SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
+import { Search, SlidersHorizontal, X, RefreshCcw } from "lucide-react";
+import FiltersPanel from "../../components/FiltersPanel";
 
 function AllProducts() {
+  // ----------------------------
+  // UI state
+  // ----------------------------
   const [page, setPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [limit] = useState(30);
 
-  // ✅ NEW filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchDraft, setSearchDraft] = useState("");
+
+  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+
+  const [selectedColors, setSelectedColors] = useState([]); // normalized e.g. ["black","red"]
+
+  // Mobile drawer
+  const [showFilters, setShowFilters] = useState(false);
+
   const [sort, setSort] = useState("newest"); // newest | priceAsc | priceDesc | nameAsc
   const [onlyDiscount, setOnlyDiscount] = useState(false);
   const [onlyInStock, setOnlyInStock] = useState(false);
 
-  // ✅ NEW UI state
-  const [showFilters, setShowFilters] = useState(false);
+  // ----------------------------
+  // Debounce search
+  // ----------------------------
+  useEffect(() => {
+    const t = setTimeout(() => setSearchTerm(searchDraft.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchDraft]);
 
-  // Fetch
-  const { data: productsData, isLoading: loadingProducts } = useGetProductsQuery({
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, priceRange.min, priceRange.max, onlyDiscount, onlyInStock, sort, selectedColors]);
+
+  // Scroll to top on page change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
+
+  // ----------------------------
+  // Map UI sort -> API sort/order
+  // ----------------------------
+  const { apiSort, apiOrder } = useMemo(() => {
+    switch (sort) {
+      case "priceAsc":
+        return { apiSort: "price", apiOrder: "asc" };
+      case "priceDesc":
+        return { apiSort: "price", apiOrder: "desc" };
+      case "nameAsc":
+        return { apiSort: "name", apiOrder: "asc" };
+      case "newest":
+      default:
+        return { apiSort: "createdAt", apiOrder: "desc" };
+    }
+  }, [sort]);
+
+  // ----------------------------
+  // Queries
+  // ----------------------------
+  const { data: categoryTree } = useGetCategoriesTreeQuery();
+
+  const {
+    data: productsData,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useGetProductsQuery({
     pageNumber: page,
-    keyword: searchQuery,
-    // if your backend supports these, keep them; otherwise they are harmless
-    sort,
-    onlyDiscount,
-    onlyInStock,
+    keyword: searchTerm,
+    limit,
+
+    // ✅ if backend supports:
+    sort: apiSort,
+    order: apiOrder,
+    minPrice: priceRange.min ? Number(priceRange.min) : undefined,
+    maxPrice: priceRange.max ? Number(priceRange.max) : undefined,
+    inStock: onlyInStock ? true : undefined,
+    color: selectedColors.length ? selectedColors.join(",") : undefined,
   });
 
   const products = productsData?.products || [];
   const pages = productsData?.pages || 1;
 
-  const { data: categoryTree } = useGetCategoriesTreeQuery();
+  // ----------------------------
+  // Color normalize (shared logic)
+  // ----------------------------
+  const normalizeColor = (c) =>
+    String(c || "")
+      .trim()
+      .toLowerCase();
 
-  const containerVariants = { visible: { transition: { staggerChildren: 0.06 } } };
-  const itemVariants = { hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0 } };
-
-  // ✅ NEW: debounce search (less API spam)
-  const [searchDraft, setSearchDraft] = useState("");
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setSearchQuery(searchDraft);
-      setPage(1);
-    }, 350);
-    return () => clearTimeout(t);
-  }, [searchDraft]);
-
-  // ✅ Scroll to top on page change
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
-
-  const handleClear = () => {
-    setSearchDraft("");
-    setSearchQuery("");
-    setSort("newest");
-    setOnlyDiscount(false);
-    setOnlyInStock(false);
-    setPage(1);
-  };
-
-  // ✅ If backend does NOT support sorting/filters, we still apply locally as a fallback
+  // ----------------------------
+  // Local fallback filters (discount + inStock + color + sort)
+  // If backend doesn't support them, UI still works.
+  // ----------------------------
   const viewProducts = useMemo(() => {
     let list = [...products];
 
     if (onlyDiscount) list = list.filter((p) => p?.hasDiscount);
+
     if (onlyInStock) {
       list = list.filter((p) => {
         if (p?.variants?.length) {
-          // any variant has any size with stock > 0
           return p.variants.some((v) => (v?.sizes || []).some((s) => (s?.stock || 0) > 0));
         }
         return (p?.countInStock || 0) > 0;
+      });
+    }
+
+    if (selectedColors.length > 0) {
+      list = list.filter((p) => {
+        if (p?.variants?.length) {
+          return p.variants.some((v) => selectedColors.includes(normalizeColor(v?.color)));
+        }
+        return selectedColors.includes(normalizeColor(p?.color));
       });
     }
 
@@ -91,189 +143,261 @@ function AllProducts() {
         break;
       case "newest":
       default:
-        // keep server order (usually newest)
-        break;
+        break; // keep server order
     }
 
     return list;
-  }, [products, onlyDiscount, onlyInStock, sort]);
+  }, [products, onlyDiscount, onlyInStock, selectedColors, sort]);
 
-  const activeFiltersCount =
-    (onlyDiscount ? 1 : 0) + (onlyInStock ? 1 : 0) + (sort !== "newest" ? 1 : 0);
+  const activeFilterCount =
+    (searchTerm ? 1 : 0) +
+    (priceRange.min || priceRange.max ? 1 : 0) +
+    (onlyDiscount ? 1 : 0) +
+    (onlyInStock ? 1 : 0) +
+    (sort !== "newest" ? 1 : 0) +
+    (selectedColors.length ? 1 : 0);
 
+  const clearFilters = () => {
+    setSearchDraft("");
+    setSearchTerm("");
+    setPriceRange({ min: "", max: "" });
+    setOnlyDiscount(false);
+    setOnlyInStock(false);
+    setSort("newest");
+    setSelectedColors([]);
+    setPage(1);
+  };
+
+  // ----------------------------
+  // Motion variants
+  // ----------------------------
+  const containerVariants = { visible: { transition: { staggerChildren: 0.06 } } };
+  const itemVariants = { hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0 } };
+
+  // ----------------------------
+  // Render
+  // ----------------------------
   return (
     <Layout>
-      {loadingProducts ? (
-        <Loader />
-      ) : (
-        <div className="container px-2 mx-auto py-24 lg:px-28 min-h-screen">
-          {/* Header */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
-            <div>
-              <h2 className="text-4xl font-semibold text-gray-900">All Products</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Browse and filter products.{" "}
-                <span className="font-medium text-gray-800">{viewProducts.length}</span> shown
-              </p>
-            </div>
+      <div className="relative min-h-screen mt-[70px] overflow-x-hidden">
+        {/* Background */}
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-x-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-neutral-50 to-white" />
+          <div className="absolute left-1/2 top-24 h-72 w-[92vw] max-w-[46rem] -translate-x-1/2 rounded-full bg-neutral-200/45 blur-3xl" />
+        </div>
 
-            {/* Right actions */}
-            <div className="flex items-center gap-2">
+        <div className="lg:container lg:mx-auto px-3 lg:px-10 py-8 overflow-x-hidden">
+          {/* Header */}
+          <div className="mb-5">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-neutral-950">
+              All Products
+            </h2>
+            <p className="mt-2 text-neutral-600">
+              {isLoading ? "Loading products…" : `${viewProducts.length} items`}
+              {isFetching ? " (Updating…)" : ""}
+            </p>
+          </div>
+
+          {/* ✅ Mobile: search beside filter btn */}
+          <div className="lg:hidden mb-4">
+            <div className="flex items-center gap-2 w-full min-w-0">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                <input
+                  type="text"
+                  placeholder="Search products…"
+                  value={searchDraft}
+                  onChange={(e) => setSearchDraft(e.target.value)}
+                  className="w-full h-11 rounded-2xl border border-neutral-200 bg-white pl-10 pr-10 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {searchDraft?.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchDraft("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-xl grid place-items-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-50"
+                    aria-label="Clear search">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
               <button
                 type="button"
-                onClick={() => setShowFilters((p) => !p)}
-                className={clsx(
-                  "inline-flex items-center gap-2 h-10 px-4 rounded-2xl border transition",
-                  "bg-white text-gray-900 border-gray-200 hover:bg-gray-50",
-                )}>
+                onClick={() => setShowFilters(true)}
+                className="shrink-0 inline-flex items-center gap-2 h-11 rounded-2xl border border-neutral-200 bg-white px-3 text-sm font-semibold text-neutral-900 shadow-sm hover:bg-neutral-50 transition"
+                aria-label="Open filters">
                 <SlidersHorizontal className="h-4 w-4" />
-                Filters
-                {activeFiltersCount > 0 && (
-                  <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-black text-white text-xs px-2">
-                    {activeFiltersCount}
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex items-center rounded-full bg-neutral-900 px-2 py-0.5 text-xs font-medium text-white">
+                    {activeFilterCount}
                   </span>
                 )}
               </button>
-
-              {activeFiltersCount > 0 || searchQuery ? (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className={clsx(
-                    "inline-flex items-center gap-2 h-10 px-4 rounded-2xl border transition",
-                    "bg-black text-white border-black hover:bg-neutral-900",
-                  )}>
-                  <X className="h-4 w-4" />
-                  Clear
-                </button>
-              ) : null}
             </div>
+            <p className="mt-2 text-xs text-neutral-500">
+              {isFetching ? "Searching…" : searchTerm ? `Searching for “${searchTerm}”` : " "}
+            </p>
           </div>
 
-          {/* Search bar */}
-          <div className="mb-5 flex flex-col sm:flex-row gap-3 sm:items-center">
-            <div className="relative w-full sm:w-[420px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchDraft}
-                onChange={(e) => setSearchDraft(e.target.value)}
-                className="w-full h-11 pl-10 pr-10 border rounded-2xl bg-white focus:outline-none focus:ring-2 focus:ring-black/20"
-              />
-              {searchDraft?.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSearchDraft("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  aria-label="Clear search">
-                  <X className="h-4 w-4" />
-                </button>
+          {/* Layout */}
+          <div className="grid gap-6 lg:grid-cols-12">
+            {/* Desktop: search + filters left */}
+            <aside className="hidden lg:block lg:col-span-3">
+              <div className="sticky top-[96px] space-y-4">
+                {/* Search card */}
+                <div className="rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm p-5">
+                  <label className="block text-xs font-medium text-neutral-700 mb-2">Search</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                    <input
+                      type="text"
+                      placeholder="Search products…"
+                      value={searchDraft}
+                      onChange={(e) => setSearchDraft(e.target.value)}
+                      className="w-full rounded-2xl border border-neutral-200 bg-white pl-10 pr-10 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-neutral-900/10"
+                    />
+                    {searchDraft?.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchDraft("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700"
+                        aria-label="Clear search">
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    {isFetching ? "Searching…" : searchTerm ? `Searching for “${searchTerm}”` : " "}
+                  </p>
+                </div>
+
+                {/* Filters panel (component) */}
+                <FiltersPanel
+                  // UI
+                  compact={false}
+                  // state
+                  selectedColors={selectedColors}
+                  setSelectedColors={setSelectedColors}
+                  selectedSubCategory="all"
+                  setSelectedSubCategory={() => {}}
+                  priceRange={priceRange}
+                  setPriceRange={setPriceRange}
+                  sort={sort}
+                  setSort={setSort}
+                  onlyDiscount={onlyDiscount}
+                  setOnlyDiscount={setOnlyDiscount}
+                  onlyInStock={onlyInStock}
+                  setOnlyInStock={setOnlyInStock}
+                  // data
+                  products={products}
+                  allSubCategories={[]}
+                  // helpers
+                  activeFilterCount={activeFilterCount}
+                  clearFilters={clearFilters}
+                  onRefresh={refetch}
+                />
+              </div>
+            </aside>
+
+            {/* Products */}
+            <main className="lg:col-span-9 min-w-0">
+              {isLoading ? (
+                <Loader />
+              ) : isError ? (
+                <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700">
+                  {error?.data?.message || error?.error || "Failed to load products"}
+                </div>
+              ) : viewProducts.length === 0 ? (
+                <div className="rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm p-10 text-center">
+                  <p className="text-neutral-900 font-semibold">No products found</p>
+                  <p className="mt-2 text-sm text-neutral-500">
+                    Try changing your search or resetting filters.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-semibold text-white hover:bg-neutral-900 transition">
+                    <RefreshCcw className="h-4 w-4" />
+                    Reset filters
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={containerVariants}
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 lg:gap-6">
+                    {viewProducts.map((product) => (
+                      <motion.div
+                        key={product._id}
+                        variants={itemVariants}
+                        className="bg-white  overflow-hidden">
+                        <Product product={product} categoryTree={categoryTree} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  <Pagination page={page} setPage={setPage} pages={pages} />
+                </>
               )}
-            </div>
-
-            {/* Sort quick select (always visible) */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 inline-flex items-center gap-2">
-                <ArrowUpDown className="h-4 w-4" /> Sort
-              </span>
-              <select
-                value={sort}
-                onChange={(e) => {
-                  setSort(e.target.value);
-                  setPage(1);
-                }}
-                className="h-11 rounded-2xl border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-black/20">
-                <option value="newest">Newest</option>
-                <option value="priceAsc">Price: Low → High</option>
-                <option value="priceDesc">Price: High → Low</option>
-                <option value="nameAsc">Name: A → Z</option>
-              </select>
-            </div>
+            </main>
           </div>
+        </div>
 
-          {/* Filters panel */}
-          {showFilters && (
-            <div className="mb-6 rounded-3xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">Filters</h3>
+        {/* Mobile Filters Drawer */}
+        {showFilters && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
+            <div className="absolute right-0 top-0 h-full w-[92%] max-w-sm bg-white shadow-2xl overflow-y-auto">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="font-semibold text-neutral-900">Filters</span>
+                  {activeFilterCount > 0 && (
+                    <span className="ml-1 inline-flex items-center rounded-full bg-neutral-900 px-2 py-0.5 text-xs font-medium text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => setShowFilters(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="h-10 w-10 rounded-2xl border border-neutral-200 bg-white grid place-items-center"
                   aria-label="Close filters">
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <label className="flex items-center gap-3 rounded-2xl border border-gray-200 p-3 hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={onlyDiscount}
-                    onChange={(e) => {
-                      setOnlyDiscount(e.target.checked);
-                      setPage(1);
-                    }}
-                    className="h-4 w-4"
-                  />
-                  <span className="text-sm font-medium text-gray-900">Discounts only</span>
-                </label>
-
-                <label className="flex items-center gap-3 rounded-2xl border border-gray-200 p-3 hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={onlyInStock}
-                    onChange={(e) => {
-                      setOnlyInStock(e.target.checked);
-                      setPage(1);
-                    }}
-                    className="h-4 w-4"
-                  />
-                  <span className="text-sm font-medium text-gray-900">In-stock only</span>
-                </label>
+              <div className="p-4">
+                <FiltersPanel
+                  compact
+                  // state
+                  selectedColors={selectedColors}
+                  setSelectedColors={setSelectedColors}
+                  selectedSubCategory="all"
+                  setSelectedSubCategory={() => {}}
+                  priceRange={priceRange}
+                  setPriceRange={setPriceRange}
+                  sort={sort}
+                  setSort={setSort}
+                  onlyDiscount={onlyDiscount}
+                  setOnlyDiscount={setOnlyDiscount}
+                  onlyInStock={onlyInStock}
+                  setOnlyInStock={setOnlyInStock}
+                  // data
+                  products={products}
+                  allSubCategories={[]}
+                  // helpers
+                  activeFilterCount={activeFilterCount}
+                  clearFilters={clearFilters}
+                  onClose={() => setShowFilters(false)}
+                />
               </div>
             </div>
-          )}
-
-          {/* Empty state */}
-          {viewProducts.length === 0 ? (
-            <div className="rounded-3xl border border-gray-200 bg-white p-10 text-center">
-              <p className="text-lg font-semibold text-gray-900">No products found</p>
-              <p className="text-sm text-gray-500 mt-1">
-                Try changing your search or clearing filters.
-              </p>
-              <button
-                type="button"
-                onClick={handleClear}
-                className="mt-5 inline-flex items-center gap-2 h-11 px-5 rounded-2xl bg-black text-white font-semibold hover:bg-neutral-900">
-                Clear filters
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Grid */}
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={containerVariants}
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 lg:gap-6">
-                {viewProducts.map((product) => (
-                  <motion.div
-                    key={product._id}
-                    variants={itemVariants}
-                    className="bg-white rounded-xl overflow-hidden">
-                    <Product product={product} categoryTree={categoryTree} />
-                  </motion.div>
-                ))}
-              </motion.div>
-
-              {/* Pagination */}
-              <Pagination page={page} setPage={setPage} pages={pages} />
-            </>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </Layout>
   );
 }

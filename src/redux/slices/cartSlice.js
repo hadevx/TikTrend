@@ -1,9 +1,47 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+/**
+ * ✅ Backward compatible localStorage:
+ * - Old version stored:  [cartItems...]
+ * - New version stores:  { cartItems: [...], coupon: {...} | null }
+ */
 const savedData = localStorage.getItem("cart");
 
-const initialState = {
-  cartItems: savedData ? JSON.parse(savedData) : [],
+const parseSavedCart = () => {
+  if (!savedData) return { cartItems: [], coupon: null };
+
+  try {
+    const parsed = JSON.parse(savedData);
+
+    // old format: array
+    if (Array.isArray(parsed)) {
+      return { cartItems: parsed, coupon: null };
+    }
+
+    // new format: object
+    if (parsed && typeof parsed === "object") {
+      return {
+        cartItems: Array.isArray(parsed.cartItems) ? parsed.cartItems : [],
+        coupon: parsed.coupon ?? null,
+      };
+    }
+
+    return { cartItems: [], coupon: null };
+  } catch {
+    return { cartItems: [], coupon: null };
+  }
+};
+
+const initialState = parseSavedCart();
+
+const persistCart = (state) => {
+  localStorage.setItem(
+    "cart",
+    JSON.stringify({
+      cartItems: state.cartItems,
+      coupon: state.coupon,
+    }),
+  );
 };
 
 const cartSlice = createSlice({
@@ -17,28 +55,27 @@ const cartSlice = createSlice({
         variantSize: action.payload.variantSize || null,
       };
 
-      // Unique key = productId + variantId + size
       const existingProduct = state.cartItems.find(
         (product) =>
           product._id === newProduct._id &&
           product.variantId === newProduct.variantId &&
-          product.variantSize === newProduct.variantSize
+          product.variantSize === newProduct.variantSize,
       );
 
       if (existingProduct) {
-        // Increase quantity if stock allows
         state.cartItems = state.cartItems.map((product) =>
           product._id === newProduct._id &&
           product.variantId === newProduct.variantId &&
           product.variantSize === newProduct.variantSize
             ? { ...product, qty: product.qty + newProduct.qty }
-            : product
+            : product,
         );
       } else {
         state.cartItems.push(newProduct);
       }
 
-      localStorage.setItem("cart", JSON.stringify(state.cartItems));
+      // ✅ optional: if coupon is category-limited, you can validate eligibility here.
+      persistCart(state);
     },
 
     updateCart: (state, action) => {
@@ -48,7 +85,7 @@ const cartSlice = createSlice({
         (product) =>
           product._id === _id &&
           product.variantId === variantId &&
-          product.variantSize === variantSize
+          product.variantSize === variantSize,
       );
 
       if (existingProduct) {
@@ -59,7 +96,7 @@ const cartSlice = createSlice({
                 product._id === _id &&
                 product.variantId === variantId &&
                 product.variantSize === variantSize
-              )
+              ),
           );
         } else {
           state.cartItems = state.cartItems.map((product) =>
@@ -67,33 +104,51 @@ const cartSlice = createSlice({
             product.variantId === variantId &&
             product.variantSize === variantSize
               ? { ...product, qty }
-              : product
+              : product,
           );
         }
       }
 
-      localStorage.setItem("cart", JSON.stringify(state.cartItems));
+      persistCart(state);
     },
 
     removeFromCart: (state, action) => {
       const { _id, variantId = null, variantSize = null } = action.payload;
+
       state.cartItems = state.cartItems.filter(
         (product) =>
           !(
             product._id === _id &&
             product.variantId === variantId &&
             product.variantSize === variantSize
-          )
+          ),
       );
-      localStorage.setItem("cart", JSON.stringify(state.cartItems));
+
+      persistCart(state);
     },
 
     clearCart: (state) => {
       state.cartItems = [];
-      localStorage.setItem("cart", JSON.stringify(state.cartItems));
+      state.coupon = null; // ✅ clear coupon too
+      persistCart(state);
+    },
+
+    // ✅ NEW: apply coupon globally so Payment can use it
+    applyCoupon: (state, action) => {
+      // expected payload: { code, discountBy, categories: [] }
+      state.coupon = action.payload;
+      persistCart(state);
+    },
+
+    // ✅ NEW: remove coupon
+    removeCoupon: (state) => {
+      state.coupon = null;
+      persistCart(state);
     },
   },
 });
 
-export const { addToCart, removeFromCart, clearCart, updateCart } = cartSlice.actions;
+export const { addToCart, removeFromCart, clearCart, updateCart, applyCoupon, removeCoupon } =
+  cartSlice.actions;
+
 export default cartSlice.reducer;

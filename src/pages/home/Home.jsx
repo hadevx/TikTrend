@@ -10,7 +10,6 @@ import Product from "../../components/Product";
 import ProductCategorySection from "../../components/ProductCategorySection";
 import Loader from "../../components/Loader";
 import { Link } from "react-router-dom";
-import hero3 from "../../assets/images/hero3.webp";
 import { Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import FeaturedProducts from "../../components/FeaturedProducts";
 import { CollectionStrip } from "../../components/CollectionStripe";
@@ -31,6 +30,9 @@ import Test3 from "../../components/Test3.jsx";
 import Luxery from "../../components/Luxery.jsx";
 import SmoothScroll from "../../components/SmoothScroll";
 import { HeritageSection } from "../../components/Heritage.jsx";
+import Hussain from "../../components/Hussain.jsx";
+import Fahad from "../../components/Fahad.jsx";
+
 function Home() {
   const { data: products, isLoading, refetch } = useGetLatestProductsQuery();
 
@@ -48,6 +50,8 @@ function Home() {
   return (
     <Layout>
       <SmoothScroll>
+        {/* <Hussain /> */}
+        {/* <Fahad /> */}
         <Luxery />
         {/* <Test3 /> */}
         {/* <Test /> */}

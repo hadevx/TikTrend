@@ -44,8 +44,8 @@ const userApi = apiSlice.injectEndpoints({
       }),
     }),
     getUserDetails: builder.query({
-      query: (userId) => ({
-        url: `/api/users/${userId}`,
+      query: () => ({
+        url: `/api/users/profile`,
       }),
     }),
     logout: builder.mutation({

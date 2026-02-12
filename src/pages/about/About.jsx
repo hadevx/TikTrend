@@ -1,174 +1,320 @@
-import React from "react";
-import Layout from "../../Layout";
-import { Sparkles, ShieldCheck, Truck, RotateCcw, HeartHandshake } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import Layout from "../../Layout";
 
-export default function About() {
-  const values = [
-    {
-      icon: Sparkles,
-      title: "Premium essentials",
-      desc: "Clean silhouettes, quality fabrics, and timeless pieces you’ll re-wear all year.",
-    },
-    {
-      icon: ShieldCheck,
-      title: "Trusted & secure",
-      desc: "Secure checkout and reliable support—your experience always comes first.",
-    },
-    {
-      icon: HeartHandshake,
-      title: "Made for you",
-      desc: "We curate with intention—fits, colors, and comfort designed for modern life.",
-    },
-  ];
+// ---- Clothing ecommerce story content (editable) ----
+const timeline = [
+  {
+    year: "2012",
+    title: "The First Drop",
+    description:
+      "We started with a small capsule of essentials—tees, denim, and outerwear—built around fit, fabric, and repeat wear.",
+  },
+  {
+    year: "2016",
+    title: "Fit & Fabric Lab",
+    description:
+      "We opened our in-house sampling program to refine patterns, test shrinkage, and improve stitching—so every piece feels better with time.",
+  },
+  {
+    year: "2019",
+    title: "Responsible Sourcing",
+    description:
+      "We began working with vetted mills and suppliers, prioritizing traceability and lower-impact materials without compromising feel.",
+  },
+  {
+    year: "2022",
+    title: "Community Built",
+    description:
+      "Customer feedback shaped our best-sellers—improved fits, better waistbands, upgraded linings, and fabrics that hold their shape.",
+  },
+  {
+    year: "2026",
+    title: "Everyday, Elevated",
+    description:
+      "Today we design modern wardrobe staples—clean silhouettes, premium fabrics, and details you notice in the mirror, not the logo.",
+  },
+];
 
-  const perks = [
-    { icon: Truck, title: "Fast delivery", desc: "Quick dispatch across Kuwait." },
-    { icon: RotateCcw, title: "Easy exchanges", desc: "Hassle-free size swaps." },
-    { icon: ShieldCheck, title: "Secure payments", desc: "Protected checkout experience." },
-  ];
+// Using online images + text overlay on the image (requested)
+const values = [
+  {
+    title: "Premium Materials",
+    description:
+      "We choose fabrics for softness, durability, and drape—then test them so they stay sharp after real life and real washes.",
+    image:
+      "https://images.unsplash.com/photo-1520975958225-25b5f9bda2a1?auto=format&fit=crop&w=1400&q=80",
+    kicker: "Fabric First",
+  },
+  {
+    title: "Tailored Fit",
+    description:
+      "Patterns are refined across sizes to keep proportions right—comfortable through the shoulders, clean through the waist, easy to move in.",
+    image:
+      "https://images.unsplash.com/photo-1520975869018-6f9f20f08a15?auto=format&fit=crop&w=1400&q=80",
+    kicker: "Made to Move",
+  },
+  {
+    title: "Quality Details",
+    description:
+      "Better zippers, stronger seams, cleaner finishes. The kind of quality you feel every time you put it on.",
+    image:
+      "https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=1400&q=80",
+    kicker: "Built to Last",
+  },
+];
+
+const craftsmen = [
+  {
+    name: "Lorenzo Benedetti",
+    role: "Head of Production",
+    years: "12 years",
+    image:
+      "https://images.unsplash.com/photo-1520975682193-cb7e3a88c42f?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    name: "Sofia Marchetti",
+    role: "Lead Designer",
+    years: "9 years",
+    image:
+      "https://images.unsplash.com/photo-1520975741351-1e5b9fc5f386?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    name: "Alessandro Rossi",
+    role: "Quality Director",
+    years: "10 years",
+    image:
+      "https://images.unsplash.com/photo-1520975730708-5b6e1d2a10a8?auto=format&fit=crop&w=1400&q=80",
+  },
+];
+
+// ---- Text animation helpers (repeats every time it enters view: NOT once) ----
+function splitWords(text = "") {
+  return String(text).trim().split(/\s+/).filter(Boolean);
+}
+
+const wordContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.055, delayChildren: 0.05 } },
+};
+
+const wordUp = {
+  hidden: { y: 18, opacity: 0, filter: "blur(6px)" },
+  show: {
+    y: 0,
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+function AnimatedWords({ text, className }) {
+  const reduce = useReducedMotion();
+  const words = splitWords(text);
+
+  if (reduce) return <span className={className}>{text}</span>;
+
+  return (
+    <motion.span
+      className={className}
+      variants={wordContainer}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ amount: 0.65, margin: "-80px" }} // ✅ not once
+    >
+      {words.map((w, i) => (
+        <motion.span key={`${w}-${i}`} className="inline-block mr-[0.28em]" variants={wordUp}>
+          {w}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+}
+
+export default function AboutPage() {
+  const reduce = useReducedMotion();
 
   return (
     <Layout>
-      {/* 🔒 Prevent horizontal scroll */}
-      <div className="relative mt-[70px] min-h-screen overflow-x-hidden">
-        {/* Background blobs (SAFE) */}
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-white via-neutral-50 to-white" />
+      <main className="min-h-screen bg-white text-zinc-900">
+        {/* Introduction (no hero) */}
+        <section className="pt-24 lg:pt-28 pb-14 lg:pb-16 px-6">
+          <div className="mx-auto max-w-4xl text-center">
+            <motion.span
+              initial={reduce ? false : { opacity: 0, y: 10 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="text-xs tracking-[0.4em] uppercase text-zinc-500 mb-5 block">
+              About
+            </motion.span>
 
-          {/* CENTER BLUR */}
-          <div className="absolute left-1/2 top-16 h-72 w-[90vw] max-w-[700px] -translate-x-1/2 rounded-full bg-neutral-200/45 blur-3xl" />
+            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.1] text-balance text-zinc-900">
+              <AnimatedWords text="Designed for everyday wear. Built to last." />
+            </h1>
 
-          {/* RIGHT BLUR */}
-          <div className="absolute right-0 top-80 h-64 w-64 translate-x-1/2 rounded-full bg-neutral-200/30 blur-3xl" />
-        </div>
-
-        <div className="container-custom px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
-          {/* HERO */}
-          <section className="rounded-[28px] border border-neutral-200 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
-            <div className="p-6 sm:p-10 lg:p-12 max-w-full">
-              <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-semibold text-neutral-700">
-                  <Sparkles className="h-4 w-4" />
-                  About our Store
-                </div>
-
-                <h1 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-neutral-950">
-                  Minimal fashion. <span className="italic font-light">Maximum confidence.</span>
-                </h1>
-
-                <p className="mt-4 text-neutral-600 leading-relaxed">
-                  Our store is built around everyday essentials—pieces that feel premium, fit right,
-                  and stay timeless. We focus on quality, comfort, and a smooth shopping experience.
-                </p>
-
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <Link
-                    to="/all-products"
-                    className="inline-flex items-center justify-center rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-semibold text-white hover:bg-neutral-900 transition">
-                    Shop collection
-                  </Link>
-                  <Link
-                    to="/contact"
-                    className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-5 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition">
-                    Contact us
-                  </Link>
-                </div>
-
-                {/* STATS */}
-                <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { k: "Quality", v: "Premium fabrics" },
-                    { k: "Delivery", v: "Fast dispatch" },
-                    { k: "Support", v: "Always responsive" },
-                    { k: "Style", v: "Clean & modern" },
-                  ].map((s) => (
-                    <div key={s.k} className="rounded-2xl border border-neutral-200 bg-white p-4">
-                      <div className="text-sm font-semibold text-neutral-950">{s.k}</div>
-                      <div className="mt-1 text-xs text-neutral-600">{s.v}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* PERKS */}
-            <div className="border-t border-neutral-200 bg-neutral-50/70">
-              <div className="grid sm:grid-cols-3">
-                {perks.map((p, idx) => {
-                  const Icon = p.icon;
-                  return (
-                    <div
-                      key={p.title}
-                      className={`p-6 sm:p-7 ${idx !== 0 ? "sm:border-l border-neutral-200" : ""}`}>
-                      <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-neutral-200 bg-white">
-                        <Icon className="h-5 w-5 text-neutral-900" />
-                      </div>
-                      <div className="mt-4 text-base font-semibold text-neutral-950">{p.title}</div>
-                      <p className="mt-2 text-sm text-neutral-600">{p.desc}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-
-          {/* VALUES */}
-          <section className="mt-12">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-neutral-950">
-              What we stand for
-            </h2>
-            <p className="mt-2 text-neutral-600">
-              Simple principles that guide every product we ship.
+            <p className="mt-5 text-zinc-600 text-base md:text-lg leading-relaxed max-w-3xl mx-auto">
+              <AnimatedWords text="We create modern wardrobe staples—premium fabrics, clean silhouettes, and details you feel. The goal is simple: pieces that look great, fit right, and stay in rotation." />
             </p>
-
-            <div className="mt-6 grid md:grid-cols-3 gap-4 sm:gap-6">
-              {values.map((v) => {
-                const Icon = v.icon;
-                return (
-                  <div
-                    key={v.title}
-                    className="rounded-3xl border border-neutral-200 bg-white shadow-sm p-6 hover:shadow-md transition">
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50">
-                      <Icon className="h-5 w-5 text-neutral-900" />
-                    </div>
-                    <h3 className="mt-4 text-lg font-semibold text-neutral-950">{v.title}</h3>
-                    <p className="mt-2 text-sm text-neutral-600">{v.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* CTA */}
-          <section className="mt-14">
-            <div className="rounded-[28px] bg-neutral-950 px-6 sm:px-10 py-10 text-white relative overflow-hidden">
-              <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.2),transparent_55%)]" />
-              <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                <div>
-                  <div className="text-sm font-semibold text-white/80">Ready to refresh?</div>
-                  <div className="mt-2 text-2xl sm:text-3xl font-semibold">
-                    Explore the latest drop.
-                  </div>
-                  <p className="mt-2 text-white/75 max-w-xl">
-                    Find pieces you’ll wear on repeat—minimal, modern, and made to last.
-                  </p>
-                </div>
-
-                <Link
-                  to="/all-products"
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-neutral-950 hover:bg-white/90 transition">
-                  Shop now
-                </Link>
-              </div>
-            </div>
-          </section>
-
-          <div className="mt-10 text-center text-sm text-neutral-500">
-            Thanks for choosing IPSUM Store — we’re happy you’re here.
           </div>
-        </div>
-      </div>
+        </section>
+
+        {/* Timeline */}
+        <section className="py-16 lg:py-24 bg-zinc-50">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-12 lg:mb-16">
+              <span className="text-xs tracking-[0.4em] uppercase text-zinc-500 mb-4 block">
+                Our Journey
+              </span>
+              <h2 className="font-serif text-3xl lg:text-5xl text-zinc-900">
+                <AnimatedWords text="A story shaped by fit, fabric, and feedback." />
+              </h2>
+              <p className="mt-4 text-zinc-600 max-w-2xl mx-auto">
+                <AnimatedWords text="We refine continuously—so the pieces you love get even better over time." />
+              </p>
+            </div>
+
+            <div className="relative">
+              <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-zinc-200" />
+
+              {timeline.map((item, index) => (
+                <motion.div
+                  key={item.year}
+                  initial={reduce ? false : { opacity: 0, y: 18 }}
+                  whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                  viewport={{ amount: 0.35, margin: "-80px" }} // ✅ not once
+                  transition={{ duration: 0.65, delay: index * 0.06 }}
+                  className={`relative flex flex-col lg:flex-row items-start lg:items-center gap-5 lg:gap-12 mb-10 lg:mb-14 ${
+                    index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"
+                  }`}>
+                  <div className={`flex-1 ${index % 2 === 0 ? "lg:text-right" : "lg:text-left"}`}>
+                    <div className="inline-flex items-start gap-4 rounded-3xl bg-white ring-1 ring-black/10 shadow-sm p-5 lg:p-6">
+                      <div className="shrink-0">
+                        <div className="font-serif text-3xl text-zinc-900/25 leading-none">
+                          {item.year}
+                        </div>
+                      </div>
+
+                      <div className="min-w-0">
+                        <h3 className="font-serif text-xl lg:text-2xl text-zinc-900">
+                          {item.title}
+                        </h3>
+                        <p className="mt-2 text-sm lg:text-base text-zinc-600 leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="hidden lg:block relative z-10">
+                    <div className="grid h-10 w-10 place-items-center rounded-full bg-white ring-1 ring-black/10 shadow-sm">
+                      <div className="h-2.5 w-2.5 rounded-full bg-orange-500" />
+                    </div>
+                  </div>
+
+                  <div className="hidden lg:block flex-1" />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Values */}
+
+        {/* Team */}
+        {/*  <section className="py-16 lg:py-24 bg-zinc-950 text-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-12 lg:mb-16">
+              <span className="text-xs tracking-[0.4em] uppercase text-white/55 mb-4 block">
+                The People
+              </span>
+              <h2 className="font-serif text-3xl lg:text-5xl">
+                <AnimatedWords text="Design, production, and quality — together." />
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {craftsmen.map((person, index) => (
+                <motion.div
+                  key={person.name}
+                  initial={reduce ? false : { opacity: 0, y: 18 }}
+                  whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                  viewport={{ amount: 0.35, margin: "-80px" }}
+                  transition={{ duration: 0.65, delay: index * 0.08 }}
+                  className="text-center">
+                  <div className="rounded-[28px] overflow-hidden bg-white/5 ring-1 ring-white/10 shadow-[0_26px_80px_rgba(0,0,0,0.55)]">
+                    <div className="relative aspect-[4/5] bg-white/5">
+                      <img
+                        src={person.image || "/placeholder.svg"}
+                        alt={person.name}
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+                    </div>
+
+                    <div className="p-5">
+                      <h3 className="font-serif text-xl lg:text-2xl">{person.name}</h3>
+                      <p className="mt-1 text-white/70 text-sm">{person.role}</p>
+                      <p className="mt-2 text-[11px] font-semibold tracking-[0.22em] uppercase text-white/45">
+                        {person.years}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section> */}
+
+        {/* Quote */}
+        <section className="py-16 lg:py-24 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <motion.blockquote
+              initial={reduce ? false : { opacity: 0, y: 18 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ amount: 0.55, margin: "-80px" }}
+              transition={{ duration: 0.8 }}>
+              <p className="font-serif text-2xl lg:text-4xl leading-relaxed mb-8 text-balance text-zinc-900">
+                <AnimatedWords text="“The best piece isn’t the loudest — it’s the one you wear the most.”" />
+              </p>
+              <cite className="not-italic">
+                <span className="block text-sm tracking-[0.2em] uppercase text-zinc-500">
+                  — Studio Team
+                </span>
+              </cite>
+            </motion.blockquote>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-16 lg:py-24 bg-zinc-50">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <motion.div
+              initial={reduce ? false : { opacity: 0, y: 18 }}
+              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+              viewport={{ amount: 0.55, margin: "-80px" }}>
+              <span className="text-xs tracking-[0.4em] uppercase text-zinc-500 mb-4 block">
+                Explore
+              </span>
+              <h2 className="font-serif text-3xl lg:text-5xl mb-6 text-zinc-900">
+                <AnimatedWords text="Build your everyday wardrobe." />
+              </h2>
+              <p className="text-zinc-600 text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+                <AnimatedWords text="Shop essentials designed to fit well, feel better, and last longer." />
+              </p>
+
+              <Link
+                to="/all-products"
+                className="group inline-flex items-center gap-3 rounded-2xl bg-zinc-900 text-white px-8 py-4 text-sm font-extrabold shadow-[0_18px_60px_rgba(0,0,0,0.18)] hover:gap-4 transition-all">
+                View Collection
+                <ArrowRight className="h-4 w-4 stroke-[1.5]" />
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+      </main>
     </Layout>
   );
 }

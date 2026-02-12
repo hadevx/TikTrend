@@ -44,7 +44,9 @@ function Register() {
     try {
       const res = await registerUser({ name, email, phone, password, confirmPassword }).unwrap();
       dispatch(setUserInfo({ ...res }));
-      navigate("/");
+
+      // ✅ after register go to profile
+      navigate("/profile");
     } catch (error) {
       toast.error(error?.data?.message || error?.error || "An error occurred", {
         position: "top-center",

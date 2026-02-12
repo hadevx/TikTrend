@@ -5,7 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import store from "./redux/store.js";
 import ToastWrapper from "./ToastWrapper.jsx";
-import MaintenanceWrapper from "./components/MaintenanceWrapper.jsx";
+import StoreWrapper from "./components/StoreWrapper.jsx";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { StrictMode } from "react";
 
@@ -17,12 +17,12 @@ createRoot(document.getElementById("root")).render(
       <PayPalScriptProvider options={{ "client-id": clientId, locale: "ar_KW" }}>
         <BrowserRouter>
           <ToastWrapper>
-            <MaintenanceWrapper>
+            <StoreWrapper>
               <App />
-            </MaintenanceWrapper>
+            </StoreWrapper>
           </ToastWrapper>
         </BrowserRouter>
       </PayPalScriptProvider>
     </Provider>
-  </StrictMode>
+  </StrictMode>,
 );

@@ -4,7 +4,7 @@ export const maintenanceApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getStoreStatus: builder.query({
       query: () => ({
-        url: "/api/update-store-status",
+        url: "/api/store",
       }),
     }),
   }),

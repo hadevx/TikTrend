@@ -2,12 +2,36 @@ import { apiSlice } from "./apiSlice";
 
 export const productApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
+    // redux/queries/productApi.js
+    // redux/queries/productApi.js
     getProducts: builder.query({
-      query: ({ pageNumber = 1, keyword = "" }) => ({
-        url: `/api/products?pageNumber=${pageNumber}&keyword=${keyword}`,
+      query: ({
+        pageNumber = 1,
+        keyword = "",
+        limit = 30,
+        color,
+        inStock,
+        minPrice,
+        maxPrice,
+        sort,
+        order,
+      } = {}) => ({
+        url: "/api/products",
+        params: {
+          pageNumber,
+          keyword,
+          limit,
+          color, // "red,black"
+          inStock, // must become "true" for backend check
+          minPrice,
+          maxPrice,
+          sort,
+          order,
+        },
       }),
       providesTags: ["Product"],
     }),
+
     getAllProducts: builder.query({
       query: () => ({
         url: "/api/products/all",
@@ -15,14 +39,36 @@ export const productApi = apiSlice.injectEndpoints({
     }),
     getProductById: builder.query({
       query: (productId) => ({
-        url: `/api/products/product/${productId}`,
+        url: `/api/products/${productId}`,
       }),
     }),
+
     getProductsByCategory: builder.query({
-      query: (id) => ({
+      query: ({
+        id,
+        page = 1,
+        limit,
+        search = "",
+        sort = "createdAt",
+        order = "desc",
+        minPrice,
+        maxPrice,
+        inStock,
+      }) => ({
         url: `/api/products/category/${id}`,
+        params: {
+          page,
+          limit,
+          search,
+          sort,
+          order,
+          minPrice,
+          maxPrice,
+          inStock,
+        },
       }),
     }),
+
     updateStock: builder.mutation({
       query: (orderItems) => ({
         url: "/api/products/update-stock",
@@ -30,16 +76,7 @@ export const productApi = apiSlice.injectEndpoints({
         body: orderItems,
       }),
     }),
-    getDeliveryStatus: builder.query({
-      query: () => ({
-        url: `/api/products/delivery`,
-      }),
-    }),
-    getDiscountStatus: builder.query({
-      query: () => ({
-        url: `/api/products/discount`,
-      }),
-    }),
+
     getLatestProducts: builder.query({
       query: () => ({
         url: "/api/products/latest",
@@ -62,19 +99,38 @@ export const productApi = apiSlice.injectEndpoints({
         url: "/api/category/main-cat-count",
       }),
     }),
+    // ✅ Validate coupon (POST) -> { valid, code, discountBy, categories, message }
+    validateCoupon: builder.mutation({
+      query: ({ code, cartTotal, items }) => ({
+        url: "/api/coupons/validate",
+        method: "POST",
+        body: { code, cartTotal, items },
+      }),
+    }),
+    getRelatedProducts: builder.query({
+      query: ({ productId, limit = 8 }) => ({
+        url: `/api/products/${productId}/related?limit=${limit}`,
+      }),
+    }),
+    getSaleProducts: builder.query({
+      query: ({ pageNumber = 1, keyword = "" } = {}) => ({
+        url: `/api/products/sale?pageNumber=${pageNumber}&keyword=${keyword}`,
+      }),
+    }),
   }),
 });
 
 export const {
+  useValidateCouponMutation,
   useGetProductsQuery,
+  useGetRelatedProductsQuery,
   useGetProductByIdQuery,
   useGetProductsByCategoryQuery,
   useUpdateStockMutation,
-  useGetDeliveryStatusQuery,
-  useGetDiscountStatusQuery,
   useGetLatestProductsQuery,
   useGetCategoriesTreeQuery,
   useGetAllProductsQuery,
   useFetchProductsByIdsMutation,
   useGetMainCategoriesWithCountsQuery,
+  useGetSaleProductsQuery,
 } = productApi;

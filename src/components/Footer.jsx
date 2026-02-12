@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Instagram, Twitter, Facebook } from "lucide-react";
+import { Instagram, Twitter, Phone } from "lucide-react";
 import webschema from "/images/webschema.png";
 import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
-
+import { useGetStoreStatusQuery } from "../redux/queries/maintenanceApi";
 /**
  * Simple dark footer (consistent with ClothingHero / FeaturedProducts)
  * - neutral-950 base
@@ -14,7 +14,9 @@ import clsx from "clsx";
 export default function Footer() {
   const { pathname } = useLocation();
   const currentYear = new Date().getFullYear();
+  const { data: store } = useGetStoreStatusQuery(undefined);
 
+  console.log(store);
   const footerLinks = useMemo(
     () => ({
       Shop: [
@@ -23,12 +25,12 @@ export default function Footer() {
       ],
       Support: [
         { name: "Contact", href: "/contact" },
-        { name: "Shipping", href: "/shipping" },
-        { name: "Returns", href: "/returns" },
+        { name: "Shipping", href: "/about" },
+        { name: "Returns", href: "/about" },
       ],
       Legal: [
-        { name: "Privacy", href: "/privacy" },
-        { name: "Terms", href: "/terms" },
+        { name: "Privacy", href: "/about" },
+        { name: "Terms", href: "/about" },
       ],
     }),
     [],
@@ -36,9 +38,9 @@ export default function Footer() {
 
   const socialLinks = useMemo(
     () => [
-      { name: "Instagram", icon: Instagram, href: "#" },
-      { name: "Twitter", icon: Twitter, href: "#" },
-      { name: "Facebook", icon: Facebook, href: "#" },
+      { name: "Instagram", icon: Instagram, href: store?.[0]?.instagram || "#" },
+      { name: "Twitter", icon: Twitter, href: store?.[0]?.twitter || "#" },
+      { name: "WhatsApp", icon: Phone, href: `https://wa.me/${store?.[0]?.phoneNumber}` || "#" },
     ],
     [],
   );

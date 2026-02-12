@@ -1,6 +1,48 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
+/* Text animation variants */
+const container = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.06,
+    },
+  },
+};
+
+const word = {
+  hidden: {
+    y: 28,
+    opacity: 0,
+  },
+  show: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+function AnimatedText({ text, className }) {
+  return (
+    <motion.span
+      variants={container}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ margin: "-80px" }} // 👈 retriggers when re-entering
+      className={className}>
+      {text.split(" ").map((wordText, i) => (
+        <motion.span key={i} variants={word} className="inline-block mr-[0.25em]">
+          {wordText}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+}
+
 export function HeritageSection() {
   const sectionRef = useRef(null);
 
@@ -14,14 +56,14 @@ export function HeritageSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative text-white font-playfair min-h-screen flex items-center overflow-hidden">
+      className="relative min-h-screen flex items-center overflow-hidden font-playfair text-white">
       {/* Parallax background */}
       <motion.div style={{ y }} className="absolute inset-0 -top-20 -bottom-20">
         <img
-          src="/italian-atelier-workshop-artisan-crafting-luxury-l.jpg"
-          alt="Heritage craftsmanship in Italian atelier"
+          src="/q.jpg"
+          alt="Clothing craftsmanship"
+          className="absolute inset-0 w-full h-full object-cover"
           loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-black/60" />
       </motion.div>
@@ -29,68 +71,48 @@ export function HeritageSection() {
       {/* Content */}
       <div className="relative z-10 w-full px-6 lg:px-8 py-24 lg:py-32">
         <div className="max-w-3xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
+          {/* Eyebrow */}
+          <motion.span
+            initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}>
-            <span className="text-xs tracking-[0.4em] uppercase text-background/70 mb-6 block">
-              Our Heritage
-            </span>
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            viewport={{ margin: "-80px" }}
+            className="block mb-6 text-xs tracking-[0.4em] uppercase text-white/70">
+            Our Collection
+          </motion.span>
 
-            <h2 className="font-serif text-4xl lg:text-6xl text-background mb-8 leading-[1.15] text-balance">
-              Crafted with Intention,
-              <br />
-              Made in Italy
-            </h2>
+          {/* Headline */}
+          <h2 className="font-serif text-4xl lg:text-6xl leading-[1.15] mb-8">
+            <AnimatedText text="Elevated Everyday Wear," />
+            <br />
+            <AnimatedText text="Designed to Move With You" />
+          </h2>
 
-            <p className="text-background/80 text-lg lg:text-xl leading-relaxed max-w-2xl mx-auto mb-12">
-              For over five generations, our artisans have perfected the art of quiet luxury. Each
-              piece is meticulously crafted in our Florence atelier, where tradition meets
-              contemporary vision.
-            </p>
+          {/* Description */}
+          <p className="text-lg lg:text-xl leading-relaxed text-white/80 max-w-2xl mx-auto mb-14">
+            <AnimatedText text="Premium fabrics, refined silhouettes, and timeless essentials crafted for modern life. Designed for comfort, built for confidence." />
+          </p>
 
-            <div className="flex flex-wrap justify-center gap-12 lg:gap-20">
+          {/* Stats */}
+          <div className="flex flex-wrap justify-center gap-12 lg:gap-20">
+            {[
+              { value: "2019", label: "Established" },
+              { value: "150+", label: "Styles Released" },
+              { value: "98%", label: "Customer Satisfaction" },
+            ].map((item, i) => (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                key={item.label}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}>
-                <span className="font-serif text-4xl lg:text-5xl text-background block mb-2">
-                  1847
-                </span>
-                <span className="text-xs tracking-[0.2em] uppercase text-background/60">
-                  Founded
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                viewport={{ margin: "-80px" }}>
+                <span className="block mb-2 text-4xl lg:text-5xl font-serif">{item.value}</span>
+                <span className="text-xs tracking-[0.2em] uppercase text-white/60">
+                  {item.label}
                 </span>
               </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.3 }}>
-                <span className="font-serif text-4xl lg:text-5xl text-background block mb-2">
-                  5
-                </span>
-                <span className="text-xs tracking-[0.2em] uppercase text-background/60">
-                  Generations
-                </span>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.4 }}>
-                <span className="font-serif text-4xl lg:text-5xl text-background block mb-2">
-                  200+
-                </span>
-                <span className="text-xs tracking-[0.2em] uppercase text-background/60">
-                  Hours per Piece
-                </span>
-              </motion.div>
-            </div>
-          </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

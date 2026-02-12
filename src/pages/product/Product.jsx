@@ -7,6 +7,7 @@ import clsx from "clsx";
 import {
   useGetProductByIdQuery,
   useGetProductsByCategoryQuery,
+  useGetRelatedProductsQuery,
 } from "../../redux/queries/productApi";
 import Loader from "../../components/Loader";
 import { Check, Minus, Plus, ChevronRight } from "lucide-react";
@@ -62,6 +63,118 @@ function AddedAnimation() {
     </motion.div>
   );
 }
+function RelatedProductsSection({ title = "Related Products", products, isLoading }) {
+  if (isLoading) {
+    return (
+      <section className="max-w-7xl mx-auto px-6 pb-20">
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <h2 className="font-serif text-2xl md:text-3xl">{title}</h2>
+            <p className="text-sm text-muted-foreground mt-1">Loading suggestions…</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="border border-border bg-background">
+              <div className="aspect-[4/5] bg-muted animate-pulse" />
+              <div className="p-3 space-y-2">
+                <div className="h-4 bg-muted animate-pulse w-3/4" />
+                <div className="h-3 bg-muted animate-pulse w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  const list = Array.isArray(products) ? products : [];
+  if (!list.length) return null;
+
+  return (
+    <section className="max-w-7xl mx-auto px-6 pb-20">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+        <div>
+          <h2 className="font-serif text-2xl md:text-3xl">{title}</h2>
+          <p className="text-sm text-muted-foreground mt-1">You might also like these products</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        {list.slice(0, 8).map((p) => {
+          const img =
+            p?.image?.[0]?.url ||
+            (typeof p?.image?.[0] === "string" ? p.image[0] : null) ||
+            "/placeholder.svg";
+
+          const oldPrice = Number(p?.price ?? 0);
+          const finalPrice = p?.hasDiscount ? Number(p?.discountedPrice ?? oldPrice) : oldPrice;
+
+          return (
+            <Link
+              to={`/product/${p?._id}`}
+              key={p?._id}
+              className={clsx(
+                "group border border-border bg-background overflow-hidden transition",
+                "hover:border-foreground/30",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25",
+              )}>
+              {/* Image */}
+              <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+                <img
+                  src={img}
+                  alt={p?.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  loading="lazy"
+                />
+
+                {/* Discount badge */}
+                {p?.hasDiscount ? (
+                  <div className="absolute top-3 left-3 bg-black text-white text-[11px] tracking-widest uppercase px-2 py-1">
+                    Sale
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Info */}
+              <div className="p-3 md:p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-sm md:text-base font-semibold leading-snug line-clamp-2">
+                    {p?.name}
+                  </h3>
+                </div>
+
+                {/* Price */}
+                <div className="text-sm">
+                  {p?.hasDiscount ? (
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xs text-muted-foreground line-through">
+                        {oldPrice.toFixed(3)} KD
+                      </span>
+                      <span className="text-foreground font-semibold">
+                        {finalPrice.toFixed(3)} KD
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-foreground font-semibold">
+                      {finalPrice.toFixed(3)} KD
+                    </span>
+                  )}
+                </div>
+
+                {/* Stock hint (optional) */}
+                <p className="text-xs text-muted-foreground">
+                  {Number(p?.countInStock || 0) > 0 ? "In stock" : "Out of stock"}
+                </p>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 /** ✅ Simple error hint */
 function InlineHint({ show, text }) {
@@ -84,7 +197,10 @@ function InlineHint({ show, text }) {
 export default function Product() {
   const dispatch = useDispatch();
   const { productId } = useParams();
-
+  const { data: related, isLoading: loadingRelatedProducts } = useGetRelatedProductsQuery({
+    productId,
+    limit: 8,
+  });
   const { data: product, isLoading, refetch } = useGetProductByIdQuery(productId);
   const cartItems = useSelector((state) => state.cart.cartItems);
 
@@ -529,7 +645,7 @@ export default function Product() {
                   className={clsx(
                     "relative w-full py-4 text-sm tracking-widest uppercase transition-colors",
                     stock === 0
-                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                      ? "bg-gray-200 text-muted-foreground cursor-not-allowed"
                       : addedPulse
                         ? "bg-emerald-600 text-white"
                         : "bg-black text-white hover:bg-foreground/90",
@@ -551,92 +667,12 @@ export default function Product() {
               </motion.div>
             </div>
           </section>
-
-          {/* Related Products */}
-          <section className="max-w-7xl mx-auto px-6 pb-20">
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <h3 className="font-serif text-2xl md:text-3xl">You may also like</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  More items in the same category
-                </p>
-              </div>
-              <Link
-                to={categoryId ? `/category/${categoryId}` : "/all-products"}
-                className="hidden md:inline-flex items-center text-sm tracking-[0.2em] uppercase border-b border-foreground pb-1 hover:border-transparent transition-colors duration-300">
-                View category
-              </Link>
-            </div>
-
-            <div className="mt-8">
-              {loadingRelated ? (
-                <Loader />
-              ) : relatedProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
-                  {relatedProducts.map((p, idx) => {
-                    const img =
-                      p?.variants?.[0]?.images?.[0]?.url ||
-                      p?.image?.[0]?.url ||
-                      "/placeholder.svg";
-
-                    const op = Number(p?.price ?? 0);
-                    const fp = p?.hasDiscount ? Number(p?.discountedPrice ?? op) : op;
-
-                    const cat =
-                      typeof p?.category === "object" && p?.category?.name
-                        ? p.category.name
-                        : "Collection";
-
-                    return (
-                      <motion.div
-                        key={p._id}
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-50px" }}
-                        transition={{ duration: 0.6, delay: idx * 0.1, ease: "easeOut" }}>
-                        <Link to={`/products/${p._id}`} className="group block">
-                          <div className="relative aspect-[3/4] overflow-hidden bg-muted mb-4">
-                            <img
-                              src={img}
-                              alt={p.name}
-                              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                              loading="lazy"
-                              draggable={false}
-                            />
-                            <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.08)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          </div>
-
-                          <div className="space-y-1">
-                            <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground">
-                              {cat}
-                            </p>
-                            <h4 className="font-serif text-lg leading-snug">{p.name}</h4>
-                            <p className="text-sm text-muted-foreground tracking-wide">
-                              {p?.hasDiscount ? (
-                                <>
-                                  <span className="line-through mr-2">{op.toFixed(3)} KD</span>
-                                  <span className="text-foreground">{fp.toFixed(3)} KD</span>
-                                </>
-                              ) : (
-                                <>Starting at {fp.toFixed(3)} KD</>
-                              )}
-                            </p>
-                          </div>
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="border border-border bg-background p-10 text-center">
-                  <p className="text-sm font-medium text-foreground">No related products found.</p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Nothing else in this category yet.
-                  </p>
-                </div>
-              )}
-            </div>
-          </section>
+          {/* ✅ Related Products */}
+          <RelatedProductsSection
+            title="Related Products"
+            products={related}
+            isLoading={loadingRelatedProducts}
+          />
         </main>
       )}
     </Layout>
