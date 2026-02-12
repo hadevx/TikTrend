@@ -285,25 +285,8 @@ export function usePayment(
         return;
       }
 
-      /*  const out = await runServerStockCheck();
-      if (Array.isArray(out) && out.length > 0) {
-        toast.error("Some items are out of stock. Please update your cart.", {
-          position: "top-center",
-        });
-        return;
-      } */
-
       const payload = buildCreateOrderPayload();
       const created = await createOrder(payload).unwrap();
-
-      // ✅ update stock AFTER order success
-      /*    try {
-        await updateStockForOrder();
-      } catch (e) {
-        toast.info("Order placed, but stock update failed. Please refresh.", {
-          position: "top-center",
-        });
-      } */
 
       // ✅ CLEAR CART HERE
       clearCartAfterSuccess();
