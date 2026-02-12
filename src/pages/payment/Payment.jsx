@@ -30,7 +30,7 @@ function Payment() {
 
   // ✅ inline update mode (when address exists)
   const [editAddress, setEditAddress] = useState(false);
-
+  //test
   const userInfo = useSelector((state) => state.auth.userInfo);
   const cartItems = useSelector((state) => state.cart.cartItems || []);
   const cartCoupon = useSelector((state) => state.cart.coupon);
