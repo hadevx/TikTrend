@@ -297,13 +297,13 @@ export function usePayment(
       const created = await createOrder(payload).unwrap();
 
       // ✅ update stock AFTER order success
-      try {
+      /*   try {
         await updateStockForOrder();
       } catch (e) {
         toast.info("Order placed, but stock update failed. Please refresh.", {
           position: "top-center",
         });
-      }
+      } */
 
       // ✅ CLEAR CART HERE
       clearCartAfterSuccess();
@@ -312,7 +312,7 @@ export function usePayment(
 
       const newId = created?._id || created?.order?._id;
       if (newId) navigate(`/order/${newId}`);
-      else navigate("/orders");
+      else navigate("/profile");
     } catch (err) {
       toast.error(err?.data?.message || "Failed to place order", { position: "top-center" });
     }

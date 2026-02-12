@@ -344,9 +344,6 @@ function Payment() {
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-neutral-900">
                 Checkout
               </h1>
-              <p className="mt-1 text-sm text-neutral-500">
-                Confirm your address, choose payment, and place your order.
-              </p>
 
               {loadingProducts && cartItems.length > 0 && (
                 <p className="mt-2 text-xs font-semibold text-neutral-500">
